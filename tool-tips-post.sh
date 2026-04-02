@@ -1,8 +1,3 @@
-#!/bin/bash
-# tool-tips-post.sh - 工具执行后中文提示（带解释）
-# GitHub: https://github.com/gugug168/cute-claude-hooks
-# License: MIT
-
 input=$(cat)
 
 # 提取 JSON 字段（处理转义引号 \"）

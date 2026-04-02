@@ -1,16 +1,10 @@
 #!/usr/bin/env node
 
-/**
- * Cute Claude Hooks - NPM 安装脚本
- * 安装中文提示钩子 + 界面汉化
- * 完整支持 Windows / macOS / Linux
- * License: MIT
- */
-
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 const os = require('os');
+const pkg = require('../package.json');
 
 const MAGENTA = '\x1b[38;5;206m';
 const GREEN = '\x1b[0;32m';
@@ -21,7 +15,7 @@ const NC = '\x1b[0m';
 const IS_WIN = process.platform === 'win32';
 
 console.log(`\n${MAGENTA}==============================================${NC}`);
-console.log(`${MAGENTA}     Cute Claude Hooks 安装器${NC}`);
+console.log(`${MAGENTA}     Polished Localization for Claude Code 安装器${NC}`);
 console.log(`${MAGENTA}==============================================${NC}\n`);
 
 // 路径常量
@@ -34,7 +28,7 @@ const settingsFile = path.join(claudeDir, 'settings.json');
 // 获取 npm 包目录
 let npmDir;
 try {
-  npmDir = path.dirname(require.resolve('cute-claude-hooks/package.json'));
+  npmDir = path.dirname(require.resolve(`${pkg.name}/package.json`));
 } catch (e) {
   npmDir = path.resolve(__dirname, '..');
 }
@@ -289,7 +283,7 @@ function installHook() {
   } else {
     console.log(`${RED}验证失败! 钩子脚本可能无法正常工作${NC}`);
     console.log(`${RED}原因: ${verify.error}${NC}`);
-    console.log(`${YELLOW}建议: 请运行 cute-claude-hooks-install --verify 获取详细诊断${NC}`);
+    console.log(`${YELLOW}建议: 请运行 polished-localization-install --verify 获取详细诊断${NC}`);
   }
 
   return true;
@@ -398,7 +392,7 @@ function installLocalize() {
 // ========== 诊断模式 ==========
 function runDiagnostics() {
   console.log(`${MAGENTA}==============================================${NC}`);
-  console.log(`${MAGENTA}     Cute Claude Hooks 诊断模式${NC}`);
+  console.log(`${MAGENTA}     Polished Localization for Claude Code 诊断模式${NC}`);
   console.log(`${MAGENTA}==============================================${NC}\n`);
 
   let allOk = true;
@@ -413,7 +407,7 @@ function runDiagnostics() {
     const buf = fs.readFileSync(hookFile);
     if (buf.includes(Buffer.from('\r\n'))) {
       console.log(`${RED}  问题: 文件包含 CRLF 换行符! bash 无法正确执行${NC}`);
-      console.log(`${YELLOW}  修复: 运行 cute-claude-hooks-install 自动修复${NC}`);
+      console.log(`${YELLOW}  修复: 运行 polished-localization-install 自动修复${NC}`);
       allOk = false;
     } else {
       console.log(`${GREEN}  换行符: LF (正确)${NC}`);
@@ -437,7 +431,7 @@ function runDiagnostics() {
     }
   } else {
     console.log(`${RED}  问题: 钩子脚本不存在!${NC}`);
-    console.log(`${YELLOW}  修复: 运行 cute-claude-hooks-install${NC}`);
+    console.log(`${YELLOW}  修复: 运行 polished-localization-install${NC}`);
     allOk = false;
   }
 
@@ -552,7 +546,7 @@ function runDiagnostics() {
     console.log(`${YELLOW}  如果仍然不显示提示，请重启 Claude Code${NC}`);
   } else {
     console.log(`${RED}  发现问题! 请根据上方提示修复${NC}`);
-    console.log(`${YELLOW}  修复后运行: cute-claude-hooks-install --verify${NC}`);
+    console.log(`${YELLOW}  修复后运行: polished-localization-install --verify${NC}`);
   }
   console.log(`${MAGENTA}${'='.repeat(50)}${NC}\n`);
 
@@ -603,7 +597,7 @@ function main() {
   } else if (hookOk === false) {
     console.log(`${RED}  钩子: 安装失败或有问题${NC}`);
     if (IS_WIN) {
-      console.log(`${YELLOW}  运行诊断: cute-claude-hooks-install --verify${NC}`);
+      console.log(`${YELLOW}  运行诊断: polished-localization-install --verify${NC}`);
     }
   } else {
     console.log(`${YELLOW}  钩子: 未执行（当前模式仅安装汉化）${NC}`);
@@ -618,10 +612,10 @@ function main() {
   console.log(`${YELLOW}  请重启 Claude Code 使所有更改生效${NC}`);
 
   if (IS_WIN) {
-    console.log(`${CYAN}  如遇问题运行: cute-claude-hooks-install --verify${NC}`);
+    console.log(`${CYAN}  如遇问题运行: polished-localization-install --verify${NC}`);
   }
 
-  console.log(`${CYAN}  文档: https://github.com/gugug168/cute-claude-hooks${NC}\n`);
+  console.log(`${CYAN}  项目主页: ${pkg.homepage}${NC}\n`);
 }
 
 main();

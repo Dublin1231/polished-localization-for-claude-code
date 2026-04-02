@@ -1,13 +1,9 @@
 #!/usr/bin/env node
 
-/**
- * Cute Claude Hooks - 恢复脚本
- * 恢复 Claude Code 英文界面
- */
-
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
+const pkg = require('../package.json');
 
 const MAGENTA = '\x1b[38;5;206m';
 const GREEN = '\x1b[0;32m';
@@ -15,7 +11,7 @@ const YELLOW = '\x1b[0;33m';
 const RED = '\x1b[0;31m';
 const NC = '\x1b[0m';
 
-console.log(`\n${MAGENTA}恢复 Claude Code 英文界面...${NC}\n`);
+console.log(`\n${MAGENTA}${pkg.name} 正在恢复 Claude Code 英文界面...${NC}\n`);
 
 const pkgName = '@anthropic-ai/claude-code';
 

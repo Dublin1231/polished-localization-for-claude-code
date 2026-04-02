@@ -41,5 +41,5 @@ jobs:
       - name: ✅ Publish Success
         run: |
           echo "🎉 Successfully published to NPM!"
-          echo "📦 Package: https://www.npmjs.com/package/cute-claude-hooks"
-          echo "📖 Install: npm install -g cute-claude-hooks"
+          echo "📦 Package: https://www.npmjs.com/package/polished-localization-for-claude-code"
+          echo "📖 Install: npm install -g polished-localization-for-claude-code"

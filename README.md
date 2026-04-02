@@ -1,12 +1,14 @@
-# 🌸 Cute Claude Hooks
+# ✨ Polished Localization for Claude Code
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-Compatible-orange.svg)](https://claude.ai/code)
-[![npm version](https://img.shields.io/npm/v/cute-claude-hooks.svg)](https://www.npmjs.com/package/cute-claude-hooks)
-[![Cross Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-green.svg)](https://github.com/gugug168/cute-claude-hooks)
-[![GitHub Actions](https://github.com/gugug168/cute-claude-hooks/actions/workflows/test-localization.yml/badge.svg)](https://github.com/gugug168/cute-claude-hooks/actions/workflows/test-localization.yml)
+[![npm version](https://img.shields.io/npm/v/polished-localization-for-claude-code.svg)](https://www.npmjs.com/package/polished-localization-for-claude-code)
+[![Cross Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-green.svg)](https://github.com/Dublin1231/polished-localization-for-claude-code)
+[![GitHub Actions](https://github.com/Dublin1231/polished-localization-for-claude-code/actions/workflows/test-localization.yml/badge.svg)](https://github.com/Dublin1231/polished-localization-for-claude-code/actions/workflows/test-localization.yml)
 
-> 🌸 让 Claude Code 拥有完整的中文体验！中文提示 + 界面汉化，专为编程小白设计
+> Polished Localization for Claude Code 是一个面向 Claude Code 的高质量中文本地化与可用性增强工具包，不仅提供完整的界面翻译，还通过上下文感知的工具提示把每一步操作解释清楚，帮助用户快速理解 Claude 在做什么、为什么这么做。项目覆盖 Windows/macOS/Linux 跨平台安装与恢复流程，内置可维护的词条映射与替换机制，支持持续扩展和版本迭代，适合个人开发者、中文团队以及希望构建稳定中文开发体验的场景。
+>
+> 本项目基于 MIT 许可的社区方案演进重构，已保留许可证与归属信息并进行独立维护。
 
 > **💡 安装方式说明：**
 > - **Hook 脚本**（工具提示 + 任务完成通知）：支持 **NPM 安装** 和 **手动安装** 两种方式
@@ -66,7 +68,7 @@
 ## ✨ 特性
 
 - 📖 **中文操作提示** - 每个操作都有详细的中文解释，小白也能看懂
-- 🌸 **界面汉化** - 配置面板、命令说明、快捷键提示全中文
+- ✨ **界面汉化** - 配置面板、命令说明、快捷键提示全中文
 - 🖥️ **跨平台** - Windows/macOS/Linux 通用
 - 📦 **轻量级** - 无依赖，秒级安装
 - 🔧 **易自定义** - 完整的自定义指南
@@ -91,18 +93,18 @@
 
 ```bash
 # 全局安装
-npm install -g cute-claude-hooks
+npm install -g polished-localization-for-claude-code
 
 # 运行安装脚本
-cute-claude-hooks-install
+polished-localization-install
 
 # 恢复英文界面
-cute-claude-hooks-restore
+polished-localization-restore
 ```
 
 **或者使用 npx（无需全局安装）：**
 ```bash
-npx cute-claude-hooks-install
+npx polished-localization-install
 ```
 
 ### 方式二：国内加速安装（推荐国内用户）
@@ -111,22 +113,22 @@ npx cute-claude-hooks-install
 
 ```bash
 # 使用 npmmirror 镜像安装
-npm install -g cute-claude-hooks --registry=https://registry.npmmirror.com
+npm install -g polished-localization-for-claude-code --registry=https://registry.npmmirror.com
 
 # 运行安装脚本
-cute-claude-hooks-install
+polished-localization-install
 ```
 
 **或者使用 npx：**
 ```bash
-npx cute-claude-hooks-install
+npx polished-localization-install
 ```
 
 ### 安装选项
 
 ```
 ╔════════════════════════════════════════╗
-║     🌸 Cute Claude Hooks 安装向导 🌸   ║
+║ ✨ Polished Localization 安装向导 ✨ ║
 ╠════════════════════════════════════════╣
 ║  [1] 仅安装工具提示 (推荐新手)         ║
 ║  [2] 仅安装界面汉化                    ║
@@ -146,9 +148,9 @@ npx cute-claude-hooks-install
 ```
 ✅ 操作成功示例：
 
-🌸 小白提示：🔐 检查 GitHub 登录状态（看是否已登录、登录的是哪个账号） 🌸
-🌸 小白提示：🚀 列出 GitHub Actions 运行记录（查看自动化测试历史） 🌸
-🌸 小白提示：📦 安装依赖包（下载项目所需的库） 🌸
+✨ 小白提示：🔐 检查 GitHub 登录状态（看是否已登录、登录的是哪个账号） ✨
+✨ 小白提示：🚀 列出 GitHub Actions 运行记录（查看自动化测试历史） ✨
+✨ 小白提示：📦 安装依赖包（下载项目所需的库） ✨
 ```
 
 ### 2️⃣ 界面汉化 (Localization)
@@ -179,7 +181,7 @@ npx cute-claude-hooks-install
 
 ## 🪟 Windows 手动安装（自动安装失败时使用）
 
-如果 `cute-claude-hooks-install` 运行后中文提示没有出现，按以下步骤手动安装：
+如果 `polished-localization-install` 运行后中文提示没有出现，按以下步骤手动安装：
 
 ### 前提条件
 - 已安装 [Git for Windows](https://git-scm.com/downloads/win)
@@ -193,7 +195,7 @@ mkdir -Force "$env:USERPROFILE\.claude\hooks"
 
 # 复制脚本（替换为你的 npm 全局目录）
 $npmDir = (npm root -g).Trim()
-copy "$npmDir\cute-claude-hooks\tool-tips-post.sh" "$env:USERPROFILE\.claude\hooks\"
+copy "$npmDir\polished-localization-for-claude-code\tool-tips-post.sh" "$env:USERPROFILE\.claude\hooks\"
 ```
 
 ### 步骤二：确认 bash 可用
@@ -238,7 +240,7 @@ $env:CLAUDE_CODE_GIT_BASH_PATH = "C:\Program Files\Git\bin\bash.exe"
 echo '{"tool_name":"Read","file_path":"test.py"}' | bash "$env:USERPROFILE\.claude\hooks\tool-tips-post.sh"
 ```
 
-如果看到 `{"systemMessage":"🌸 📖 读取文件: test.py — 查看这个文件里写了什么 🌸"}`，说明脚本正常工作。
+如果看到 `{"systemMessage":"✨ 📖 读取文件: test.py — 查看这个文件里写了什么 ✨"}`，说明脚本正常工作。
 
 ### 常见问题排查
 
@@ -302,7 +304,7 @@ module.exports = {
 ## 📁 文件结构
 
 ```
-cute-claude-hooks/
+polished-localization-for-claude-code/
 ├── 📄 README.md              # 本文档
 ├── 📄 SKILL.md               # 完整自定义指南
 ├── 📄 LICENSE                # MIT 许可证
@@ -325,7 +327,7 @@ cute-claude-hooks/
 
 本项目使用 GitHub Actions 进行跨平台自动测试：
 
-[![Test Claude Code Localization](https://github.com/gugug168/cute-claude-hooks/actions/workflows/test-localization.yml/badge.svg)](https://github.com/gugug168/cute-claude-hooks/actions/workflows/test-localization.yml)
+[![Test Claude Code Localization](https://github.com/Dublin1231/polished-localization-for-claude-code/actions/workflows/test-localization.yml/badge.svg)](https://github.com/Dublin1231/polished-localization-for-claude-code/actions/workflows/test-localization.yml)
 
 | 平台 | 状态 | 测试内容 |
 |-----|------|---------|
@@ -346,7 +348,7 @@ cute-claude-hooks/
 
 查看 [SKILL.md](./SKILL.md) 获取：
 
-- 🌸 界面汉化详细说明
+- ✨ 界面汉化详细说明
 - 🎨 颜色/Emoji 自定义
 - 🔧 进阶自定义技巧
 - 🆕 添加新功能
@@ -375,7 +377,7 @@ cute-claude-hooks/
 
 ---
 
-## 🌸 推荐搭配
+## ✨ 推荐搭配
 
 如果你想要更完整的中文体验，可以搭配使用：
 
@@ -390,7 +392,7 @@ cute-claude-hooks/
 ---
 
 <p align="center">
-  Made with 🌸 by <a href="https://github.com/gugug168">gugug168</a>
+  Maintained by <a href="https://github.com/Dublin1231">Dublin1231</a> · Original community work by <a href="https://github.com/gugug168">gugug168</a>
 </p>
 
 <p align="center">
