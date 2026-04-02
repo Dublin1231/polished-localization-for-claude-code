@@ -1,0 +1,180 @@
+# 跨平台测试工作流
+# 自动在 Linux、macOS、Windows 三个环境测试 hook 脚本和汉化模块
+# 触发条件：push 到 master 分支，或手动触发
+
+name: 🧪 跨平台沙盒测试
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'localize/**'
+      - 'tool-tips-post.sh'
+      - '.github/workflows/test-localize.yml'
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  # ==================== Linux 测试 ====================
+  test-linux:
+    name: 🐧 Linux 测试
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 🔍 检查 Bash 脚本语法
+        run: |
+          echo "=== Linux 环境测试 ==="
+          bash -n tool-tips-post.sh
+          echo "✅ tool-tips-post.sh 语法正确"
+
+      - name: 🔍 检查 Node.js 模块语法
+        run: |
+          node -c localize/keyword.js
+          echo "✅ keyword.js 语法正确"
+          node -c localize/localize.js
+          echo "✅ localize.js 语法正确"
+
+      - name: 🧪 测试 Hook 中文输出
+        run: |
+          echo "=== 测试工具提示 Hook ==="
+          result=$(echo '{"tool_name":"Read","file_path":"test.py"}' | bash tool-tips-post.sh)
+          echo "输出: $result"
+          if echo "$result" | grep -q "systemMessage"; then
+            echo "✅ Hook 输出格式正确"
+          else
+            echo "❌ Hook 输出格式错误"
+            exit 1
+          fi
+
+      - name: 🧪 测试关键词字典
+        run: |
+          echo "=== 测试关键词字典 ==="
+          count=$(node -e "
+            const kw = require('./localize/keyword.js');
+            const keys = Object.keys(kw);
+            console.log(keys.length);
+          ")
+          echo "📊 关键词数量: $count"
+          if [ "$count" -gt 100 ]; then
+            echo "✅ 关键词数量充足 ($count 个)"
+          else
+            echo "⚠️ 关键词数量偏少 ($count 个)"
+          fi
+
+  # ==================== macOS 测试 ====================
+  test-macos:
+    name: 🍎 macOS 测试
+    runs-on: macos-latest
+
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 🔍 检查 Bash 脚本语法
+        run: |
+          echo "=== macOS 环境测试 ==="
+          bash -n tool-tips-post.sh
+          echo "✅ tool-tips-post.sh 语法正确"
+
+      - name: 🔍 检查 Node.js 模块语法
+        run: |
+          node -c localize/keyword.js
+          echo "✅ keyword.js 语法正确"
+          node -c localize/localize.js
+          echo "✅ localize.js 语法正确"
+
+      - name: 🧪 测试 Hook 中文输出
+        run: |
+          echo "=== 测试工具提示 Hook ==="
+          result=$(echo '{"tool_name":"Write","file_path":"hello.js"}' | bash tool-tips-post.sh)
+          echo "输出: $result"
+          if echo "$result" | grep -q "systemMessage"; then
+            echo "✅ Hook 输出格式正确"
+          else
+            echo "❌ Hook 输出格式错误"
+            exit 1
+          fi
+
+      - name: 🧪 测试关键词字典
+        run: |
+          echo "=== 测试关键词字典 ==="
+          count=$(node -e "
+            const kw = require('./localize/keyword.js');
+            const keys = Object.keys(kw);
+            console.log(keys.length);
+          ")
+          echo "📊 关键词数量: $count"
+          if [ "$count" -gt 100 ]; then
+            echo "✅ 关键词数量充足 ($count 个)"
+          else
+            echo "⚠️ 关键词数量偏少 ($count 个)"
+          fi
+
+  # ==================== Windows 测试 ====================
+  test-windows:
+    name: 🪟 Windows 测试
+    runs-on: windows-latest
+
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 🔍 检查 Node.js 模块语法
+        shell: pwsh
+        run: |
+          Write-Host "=== Windows 环境测试 ===" -ForegroundColor Cyan
+          node -c localize/keyword.js
+          Write-Host "✅ keyword.js 语法正确" -ForegroundColor Green
+          node -c localize/localize.js
+          Write-Host "✅ localize.js 语法正确" -ForegroundColor Green
+
+      - name: 🧪 测试关键词字典
+        shell: pwsh
+        run: |
+          Write-Host "=== 测试关键词字典 ===" -ForegroundColor Cyan
+          $count = node -e "const kw = require('./localize/keyword.js'); console.log(Object.keys(kw).length);"
+          Write-Host "📊 关键词数量: $count"
+          if ([int]$count -gt 100) {
+            Write-Host "✅ 关键词数量充足 ($count 个)" -ForegroundColor Green
+          } else {
+            Write-Host "⚠️ 关键词数量偏少 ($count 个)" -ForegroundColor Yellow
+          }
+
+  # ==================== 测试报告 ====================
+  test-report:
+    name: 📋 测试报告
+    needs: [test-linux, test-macos, test-windows]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📊 生成测试报告
+        run: |
+          echo "╔══════════════════════════════════════════════════════╗"
+          echo "║          🎉 跨平台沙盒测试全部通过！                  ║"
+          echo "╠══════════════════════════════════════════════════════╣"
+          echo "║  🐧 Linux   ✅ 通过                                  ║"
+          echo "║  🍎 macOS   ✅ 通过                                  ║"
+          echo "║  🪟 Windows ✅ 通过                                  ║"
+          echo "╚══════════════════════════════════════════════════════╝"
+          echo ""
+          echo "📅 测试时间: $(date '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "🔗 查看详情: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
