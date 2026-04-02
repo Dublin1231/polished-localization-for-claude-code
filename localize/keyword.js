@@ -316,7 +316,7 @@ module.exports = {
   "recurring": "循环",
   "permanent": "永久",
   "one-shot": "一次性",
-  "effort": "努力等级",
+  "effort": "effort",
   "(retry)": "（重试）",
   "(new)": "（新建）",
   "(default)": "（默认）",

@@ -50,5 +50,8 @@
     "win32",
     "darwin",
     "linux"
-  ]
+  ],
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.82.0"
+  }
 }
