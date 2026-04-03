@@ -74,7 +74,7 @@
 - 🔧 **易自定义** - 完整的自定义指南
 - 🇨🇳 **国内加速** - 支持 npmmirror 镜像安装
 - 🧪 **自动测试** - GitHub Actions 三平台自动测试
-- 🐾 **满级 Buddy** - 解锁并自定义你的 Claude Code 宠物伙伴
+- 🐾 **满级 Buddy** - 解锁并自定义你的 Claude Code 宠物伙伴（支持 18 种宠物、满级属性、闪光效果、皇冠帽子）
 
 ---
 
@@ -266,9 +266,12 @@ polished-localization-install --buddy=999
 ```
 [3/3] 修复 /buddy 时间限制...
 
-选择宠物 [5]: 狐狸 🦊 (fox)
-✓ S44 数组已修改为 [5] 狐狸 🦊 (fox)
-✅ buddy 满级补丁已应用（legendary + 全100 + crown + shiny）
+随机选择宠物 [5]: 狐狸 🦊 (fox)
+/buddy 时间限制修复成功（新版本 Zc8）！
+buddy 满级补丁已应用（新版本 hN_）
+显示函数已修复（新版本 Gc8）
+
+修复完成！请重启 Claude Code
 ```
 
 **选择无效索引时：**
@@ -281,15 +284,27 @@ polished-localization-install --buddy=999
  18: 胖猫 😸 (chonk)
 ```
 
+### 💎 Buddy 属性效果
+
+使用 `/buddy` 命令后会显示：
+- ⭐ **LEGENDARY** 稀有度
+- ✨ **SHINY** 闪光效果
+- 👑 **Crown** 皇冠帽子
+- 🎮 **PENGUIN** 企鹅宠物（固定）
+- 📊 **全属性 100**：DEBUGGING 100, PATIENCE 100, CHAOS 100, WISDOM 100, SNARK 100
+
 ### 🔧 技术原理
 
 Buddy 补丁修改了 Claude Code 的 `cli.js` 文件：
 
-1. **时间锁绕过** - 移除日期检查，允许立即使用 `/buddy` 命令
-2. **宠物选择** - 修改 S44 数组，只保留选定的宠物类型
-3. **属性强化** - 修改 yV_ 函数，强制设置满级属性
+1. **时间锁绕过** - 移除日期检查（Zc8/Fd8 函数），允许立即使用 `/buddy` 命令
+2. **满级属性** - 修改 hN_/yV_ 函数，强制设置 legendary 稀有度、全属性 100、crown 帽子、shiny 效果
+3. **固定企鹅** - species 固定为 qT8（penguin）
+4. **显示修复** - 修改 Gc8/Ud8 函数，确保正确显示宠物图形
 
 > ⚠️ **注意**: Buddy 补丁会修改 Claude Code 的内部文件。如果遇到问题，可以从备份文件 `cli.js.buddy-bak` 恢复。
+
+> 🔄 Claude Code 更新后函数名可能变化（如 Zc8→Fd8），安装脚本会自动适配新旧版本。
 
 ---
 
