@@ -15,7 +15,7 @@ const NC = '\x1b[0m';
 const IS_WIN = process.platform === 'win32';
 
 console.log(`\n${MAGENTA}==============================================${NC}`);
-console.log(`${MAGENTA}     Polished Localization for Claude Code 安装器${NC}`);
+console.log(`${MAGENTA} Polished Localization for Claude Code 安装器${NC}`);
 console.log(`${MAGENTA}==============================================${NC}\n`);
 
 // 路径常量
@@ -392,7 +392,7 @@ function installLocalize() {
 // ========== 诊断模式 ==========
 function runDiagnostics() {
   console.log(`${MAGENTA}==============================================${NC}`);
-  console.log(`${MAGENTA}     Polished Localization for Claude Code 诊断模式${NC}`);
+  console.log(`${MAGENTA} Polished Localization for Claude Code 诊断模式${NC}`);
   console.log(`${MAGENTA}==============================================${NC}\n`);
 
   let allOk = true;

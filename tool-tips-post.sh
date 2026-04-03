@@ -374,7 +374,7 @@ json_escape() {
 if [ -n "$tool_name" ]; then
     tip=$(get_tip "$tool_name")
     if [ -n "$tip" ]; then
-        escaped_tip=$(json_escape "🌸 ${tip} 🌸")
+        escaped_tip=$(json_escape "✨ ${tip} ✨")
         printf '{"systemMessage":"%s"}\n' "$escaped_tip"
     fi
 fi

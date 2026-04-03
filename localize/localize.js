@@ -138,10 +138,21 @@ function applyFixedPairs(content) {
   return { content, fixed };
 }
 
+function strWidth(str) {
+  let width = 0;
+  for (const char of str) {
+    width += (char.charCodeAt(0) > 255) ? 2 : 1;
+  }
+  return width;
+}
+
+function centerPad(str, width = 70) {
+  const diff = width - strWidth(str);
+  const pad = Math.max(0, Math.floor(diff / 2));
+  return ' '.repeat(pad) + str;
+}
+
 function run() {
-  console.log(`${MAGENTA}==============================================${NC}`);
-  console.log(`${MAGENTA}     Polished Localization for Claude Code Localizer${NC}`);
-  console.log(`${MAGENTA}==============================================${NC}\n`);
   const { cliPath, backupPath } = mustHaveCli();
   fs.copyFileSync(backupPath, cliPath);
   const keywordMap = require(path.join(__dirname, 'keyword.js'));
@@ -153,13 +164,12 @@ function run() {
   content = fixed.content;
   fs.writeFileSync(cliPath, content, 'utf8');
   console.log('');
-  console.log(`${MAGENTA}汉化完成! ${localized.replacedKeyCount}/${entries.length} 条匹配, ${localized.replacementCount} 处替换${NC}`);
+  console.log(`${MAGENTA}汉化完成!${NC}`);
+  console.log(`${GREEN}${localized.replacedKeyCount}/${entries.length} 条匹配, ${localized.replacementCount} 处替换${NC}`);
   if (fixed.fixed > 0) {
     console.log(`${GREEN}额外结构修正: ${fixed.fixed} 项${NC}`);
   }
-  if (localized.missed.length > 0) {
-    console.log(`${YELLOW}未匹配词条示例: ${localized.missed.slice(0, 8).join(' | ')}${NC}`);
-  }
+  console.log('');
   console.log(`${YELLOW}请重启 Claude Code 使汉化生效${NC}`);
 }
 
