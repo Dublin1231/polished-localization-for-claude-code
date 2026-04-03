@@ -74,6 +74,7 @@
 - 🔧 **易自定义** - 完整的自定义指南
 - 🇨🇳 **国内加速** - 支持 npmmirror 镜像安装
 - 🧪 **自动测试** - GitHub Actions 三平台自动测试
+- 🐾 **满级 Buddy** - 解锁并自定义你的 Claude Code 宠物伙伴
 
 ---
 
@@ -176,6 +177,119 @@ npx polished-localization-install
 ```bash
 ~/.claude/localize/restore.sh
 ```
+
+---
+
+## 🐾 满级 Buddy 功能
+
+Claude Code 自带一个可爱的 Buddy 宠物系统，但默认需要等到特定日期才能解锁。我们提供了一键解锁功能，并且支持从 **18 种宠物**中选择你最喜欢的伙伴！
+
+### 🎮 Buddy 功能特点
+
+- ⭐ **满级属性** - 所有属性直接满100点（DEBUGGING、PATIENCE、CHAOS、WISDOM、SNARK）
+- 👑 **稀有度** - 强制 legendary（传奇）稀有度
+- ✨ **闪光效果** - Shiny 外观
+- 🎩 **皇冠帽子** - Crown 帽子
+- 🌟 **固定种子** - inspirationSeed: 999999999
+
+### 🐾 18 种可选宠物
+
+安装时使用 `--buddy=N` 参数选择宠物（索引 1-18）：
+
+```
+  1: 理发师 💇 (groom)
+  2: 猫咪 🐱 (cat)
+  3: 小狗 🐕 (dog)
+  4: 小狼 🐺 (wolf)
+  5: 狐狸 🦊 (fox)
+  6: 水獭 🦦 (otter)
+  7: 小熊 🐻 (bear)
+  8: 小兔 🐰 (bunny)
+  9: 浣熊 🦝 (raccoon)
+ 10: 小鸭 🦆 (duck)
+ 11: 猫头鹰 🦉 (owl)
+ 12: 小牛 🐮 (cow)
+ 13: 水豚 🦫 (capybara)
+ 14: 仙人掌 🌵 (cactus)
+ 15: 机器人 🤖 (robot)
+ 16: 家兔 🐇 (rabbit)
+ 17: 蘑菇 🍄 (mushroom)
+ 18: 胖猫 😸 (chonk)
+```
+
+### 📝 使用方法
+
+**安装时选择宠物：**
+```bash
+# 安装全部功能并选择第5个宠物（狐狸）
+polished-localization-install --buddy=5
+
+# 安装全部功能并选择第9个宠物（浣熊）
+polished-localization-install --buddy=9
+
+# 安装全部功能并选择第18个宠物（胖猫）
+polished-localization-install --buddy=18
+```
+
+**单独修复 Buddy：**
+```bash
+# 只修复 Buddy，不安装其他功能
+polished-localization-install --fix-buddy
+```
+
+**随机选择宠物：**
+```bash
+# 不指定参数时，随机选择一个宠物
+polished-localization-install --buddy
+
+# 或者完全不加参数
+polished-localization-install
+```
+
+**查看所有宠物列表：**
+```bash
+# 输入无效索引会自动显示完整列表
+polished-localization-install --buddy=999
+```
+
+### 📋 参数说明
+
+| 参数 | 说明 | 示例 |
+|------|------|------|
+| `--buddy=N` | 选择第 N 个宠物（1-18） | `--buddy=5` |
+| `--buddy` | 随机选择一个宠物 | `--buddy` |
+| `--fix-buddy` | 仅修复 Buddy，不安装其他功能 | `--fix-buddy --buddy=3` |
+
+### 💡 显示效果示例
+
+**安装时：**
+```
+[3/3] 修复 /buddy 时间限制...
+
+选择宠物 [5]: 狐狸 🦊 (fox)
+✓ S44 数组已修改为 [5] 狐狸 🦊 (fox)
+✅ buddy 满级补丁已应用（legendary + 全100 + crown + shiny）
+```
+
+**选择无效索引时：**
+```
+❌ 无效的宠物索引: 0 (有效范围: 1-18)
+可用宠物列表:
+  1: 理发师 💇 (groom)
+  2: 猫咪 🐱 (cat)
+  ...
+ 18: 胖猫 😸 (chonk)
+```
+
+### 🔧 技术原理
+
+Buddy 补丁修改了 Claude Code 的 `cli.js` 文件：
+
+1. **时间锁绕过** - 移除日期检查，允许立即使用 `/buddy` 命令
+2. **宠物选择** - 修改 S44 数组，只保留选定的宠物类型
+3. **属性强化** - 修改 yV_ 函数，强制设置满级属性
+
+> ⚠️ **注意**: Buddy 补丁会修改 Claude Code 的内部文件。如果遇到问题，可以从备份文件 `cli.js.buddy-bak` 恢复。
 
 ---
 

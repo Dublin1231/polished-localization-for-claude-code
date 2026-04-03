@@ -390,8 +390,40 @@ function installLocalize() {
 }
 
 // ========== 修复 /buddy 时间限制 ==========
-function fixBuddyTimeLock() {
+function fixBuddyTimeLock(speciesIndex = null) {
   console.log(`\n${MAGENTA}[3/3] 修复 /buddy 时间限制...${NC}\n`);
+
+  const availablePets = [
+    'groom', 'cat', 'dog', 'wolf', 'fox', 'otter', 'bear', 'bunny',
+    'raccoon', 'duck', 'owl', 'cow', 'capybara', 'cactus', 'robot',
+    'rabbit', 'mushroom', 'chonk'
+  ];
+
+  const availablePetsCN = [
+    '理发师', '猫咪', '小狗', '小狼', '狐狸', '水獭', '小熊', '小兔',
+    '浣熊', '小鸭', '猫头鹰', '小牛', '水豚', '仙人掌', '机器人', '家兔',
+    '蘑菇', '胖猫'
+  ];
+
+  const availablePetsEmoji = [
+    '💇', '🐱', '🐕', '🐺', '🦊', '🦦', '🐻', '🐰', '🦝', '🦆', '🦉', '🐮',
+    '🦫', '🌵', '🤖', '🐇', '🍄', '😸'
+  ];
+
+  const availablePetsDisplay = [
+    '理发师 💇 (groom)', '猫咪 🐱 (cat)', '小狗 🐕 (dog)', '小狼 🐺 (wolf)',
+    '狐狸 🦊 (fox)', '水獭 🦦 (otter)', '小熊 🐻 (bear)', '小兔 🐰 (bunny)',
+    '浣熊 🦝 (raccoon)', '小鸭 🦆 (duck)', '猫头鹰 🦉 (owl)', '小牛 🐮 (cow)',
+    '水豚 🦫 (capybara)', '仙人掌 🌵 (cactus)', '机器人 🤖 (robot)',
+    '家兔 🐇 (rabbit)', '蘑菇 🍄 (mushroom)', '胖猫 😸 (chonk)'
+  ];
+
+  if (speciesIndex === null) {
+    speciesIndex = Math.floor(Math.random() * availablePets.length);
+    console.log(`${CYAN}随机选择宠物 [${speciesIndex + 1}]: ${availablePetsDisplay[speciesIndex]}${NC}`);
+  } else {
+    console.log(`${CYAN}选择宠物 [${speciesIndex + 1}]: ${availablePetsDisplay[speciesIndex]}${NC}`);
+  }
 
   // 查找 Claude Code npm 包路径
   let cliPath;
@@ -425,7 +457,7 @@ function fixBuddyTimeLock() {
       return true;
     }
 
-    // 原始 Fd8 函数（带日期检查）
+    // 补丁1: 移除时间限制（移除日期检查）
     const originalPattern = /function Fd8\(\)\{if\(Pq\(\)!=="firstParty"\)return!1;if\(XY\(\)\)return!1;let q=new Date;return q\.getFullYear\(\)>2026\|\|q\.getFullYear\(\)===2026&&q\.getMonth\(\)>=3\}/g;
 
     if (!originalPattern.test(content)) {
@@ -440,6 +472,50 @@ function fixBuddyTimeLock() {
     fs.writeFileSync(cliPath, content, 'utf8');
     console.log(`${GREEN}/buddy 修复成功！${NC}`);
     console.log(`${CYAN}现在可以使用 /buddy 命令了${NC}`);
+
+    // 补丁2: 满级 buddy（legendary + 全属性100 + crown + shiny）
+    try {
+      let patchedContent = fs.readFileSync(cliPath, 'utf8');
+
+      // 第一步：修改S44数组，只保留选定的宠物
+      const selectedPet = availablePets[speciesIndex];
+
+      // 匹配 S44 数组赋值语句
+      const s44Pattern = /S44=\[Pv8,Wv8,Dv8,fv8,Zv8,Gv8,vv8,Tv8,kv8,Vv8,Nv8,yv8,Ev8,Lv8,hv8,Rv8,Sv8,Cv8\]/;
+
+      if (s44Pattern.test(patchedContent)) {
+        // 将S44数组替换为只包含选定的宠物
+        const newS44 = `S44=[${['Pv8','Wv8','Dv8','fv8','Zv8','Gv8','vv8','Tv8','kv8','Vv8','Nv8','yv8','Ev8','Lv8','hv8','Rv8','Sv8','Cv8'][speciesIndex]}]`;
+        patchedContent = patchedContent.replace(s44Pattern, newS44);
+        console.log(`${GREEN}✓ S44 数组已修改为 [${speciesIndex + 1}] ${availablePetsDisplay[speciesIndex]}${NC}`);
+      } else if (patchedContent.includes('S44=[')) {
+        console.log(`${YELLOW}S44 数组格式已改变，跳过数组修改${NC}`);
+      }
+
+      // 第二步：修改 yV_ 函数
+      const yvPattern = /function yV_\(q\)\{let K=TV_\(q\);return\{bones:\{rarity:K,species:yT6\(q,S44\),eye:yT6\(q,C44\),hat:K==="common"\?"none":yT6\(q,b44\),shiny:q\(\)<0\.01,stats:VV_\(q,K\)\},inspirationSeed:Math\.floor\(q\(\)\*1e9\)\}\}/;
+      const patchedYv = 'function yV_(q){let K="legendary";return{bones:{rarity:K,species:yT6(q,S44),eye:yT6(q,C44),hat:"crown",shiny:true,stats:{DEBUGGING:100,PATIENCE:100,CHAOS:100,WISDOM:100,SNARK:100}},inspirationSeed:999999999}}';
+
+      if (yvPattern.test(patchedContent)) {
+        const backupPath = cliPath + '.buddy-bak';
+        if (!fs.existsSync(backupPath)) {
+          fs.copyFileSync(cliPath, backupPath);
+          console.log(`${GREEN}已备份 cli.js 到 buddy-bak${NC}`);
+        }
+
+        patchedContent = patchedContent.replace(yvPattern, patchedYv);
+        console.log(`${GREEN}buddy 满级补丁已应用（legendary + 全100 + crown + shiny）${NC}`);
+      } else if (patchedContent.includes('rarity:"legendary"') && patchedContent.includes('WISDOM:100')) {
+        console.log(`${GREEN}buddy 满级补丁已存在，跳过${NC}`);
+      } else {
+        console.log(`${YELLOW}buddy 生成函数未匹配，跳过${NC}`);
+      }
+
+      fs.writeFileSync(cliPath, patchedContent, 'utf8');
+    } catch (err) {
+      console.log(`${YELLOW}满级补丁应用失败: ${err.message}${NC}`);
+    }
+
     return true;
   } catch (err) {
     console.log(`${RED}修复失败: ${err.message}${NC}`);
@@ -624,9 +700,31 @@ function main() {
     return;
   }
 
+  // 解析宠物选择参数
+  let speciesIndex = null;
+  const buddyArg = args.find(arg => arg.startsWith('--buddy='));
+  if (buddyArg) {
+    const index = parseInt(buddyArg.split('=')[1], 10);
+    if (!isNaN(index) && index >= 1 && index <= 18) {
+      speciesIndex = index - 1; // 转换为数组索引（从0开始）
+    } else {
+      console.log(`${RED}无效的宠物索引: ${index} (有效范围: 1-18)${NC}`);
+      console.log(`${CYAN}可用宠物列表:${NC}`);
+      const petsDisplay = [
+        '理发师 💇 (groom)', '猫咪 🐱 (cat)', '小狗 🐕 (dog)', '小狼 🐺 (wolf)',
+        '狐狸 🦊 (fox)', '水獭 🦦 (otter)', '小熊 🐻 (bear)', '小兔 🐰 (bunny)',
+        '浣熊 🦝 (raccoon)', '小鸭 🦆 (duck)', '猫头鹰 🦉 (owl)', '小牛 🐮 (cow)',
+        '水豚 🦫 (capybara)', '仙人掌 🌵 (cactus)', '机器人 🤖 (robot)',
+        '家兔 🐇 (rabbit)', '蘑菇 🍄 (mushroom)', '胖猫 😸 (chonk)'
+      ];
+      petsDisplay.forEach((pet, i) => console.log(`  ${i + 1}: ${pet}`));
+      return;
+    }
+  }
+
   // 单独修复 /buddy 模式
   if (args.includes('--fix-buddy')) {
-    const buddyOk = fixBuddyTimeLock();
+    const buddyOk = fixBuddyTimeLock(speciesIndex);
     if (buddyOk) {
       console.log(`\n${GREEN}修复完成！请重启 Claude Code${NC}\n`);
     }
@@ -657,7 +755,7 @@ function main() {
       hookOk = installHook();
       installLocalize();
       locOk = true;
-      buddyOk = fixBuddyTimeLock();
+      buddyOk = fixBuddyTimeLock(speciesIndex);
       break;
   }
 
