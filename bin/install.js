@@ -389,6 +389,60 @@ function installLocalize() {
   }
 }
 
+// ========== 修复 /buddy 时间限制 ==========
+function fixBuddyTimeLock() {
+  console.log(`\n${MAGENTA}[3/3] 修复 /buddy 时间限制...${NC}\n`);
+
+  // 查找 Claude Code npm 包路径
+  let cliPath;
+  try {
+    const claudePkgPath = require.resolve('@anthropic-ai/claude-code/package.json');
+    cliPath = path.join(path.dirname(claudePkgPath), 'cli.js');
+  } catch (err) {
+    console.log(`${YELLOW}警告: 找不到 Claude Code npm 包，跳过 /buddy 修复${NC}`);
+    console.log(`${CYAN}如需修复，请手动运行: npx polished-localization-install --fix-buddy${NC}`);
+    return false;
+  }
+
+  if (!fs.existsSync(cliPath)) {
+    console.log(`${YELLOW}警告: cli.js 不存在，跳过 /buddy 修复${NC}`);
+    return false;
+  }
+
+  try {
+    let content = fs.readFileSync(cliPath, 'utf8');
+
+    // 检查是否已经修复
+    if (content.includes('function Fd8(){return!0}')) {
+      console.log(`${GREEN}/buddy 已修复，无需再次修改${NC}`);
+      return true;
+    }
+
+    // 原始 Fd8 函数（带日期检查）
+    const originalPattern = /function Fd8\(\)\{if\(Pq\(\)!=="firstParty"\)return!1;if\(XY\(\)\)return!1;let q=new Date;return q\.getFullYear\(\)>2026\|\|q\.getFullYear\(\)===2026&&q\.getMonth\(\)>=3\}/g;
+
+    if (!originalPattern.test(content)) {
+      console.log(`${YELLOW}警告: 未找到预期的 Fd8 函数，可能已被修改或版本不同${NC}`);
+      console.log(`${CYAN}跳过 /buddy 修复${NC}`);
+      return false;
+    }
+
+    // 替换为直接返回 true
+    content = content.replace(originalPattern, 'function Fd8(){return!0}');
+
+    fs.writeFileSync(cliPath, content, 'utf8');
+    console.log(`${GREEN}/buddy 修复成功！${NC}`);
+    console.log(`${CYAN}现在可以使用 /buddy 命令了${NC}`);
+    return true;
+  } catch (err) {
+    console.log(`${RED}修复失败: ${err.message}${NC}`);
+    console.log(`${YELLOW}可能需要管理员权限，请尝试:${NC}`);
+    console.log(`${CYAN}  Windows: 右键以管理员身份运行终端，执行以下命令:${NC}`);
+    console.log(`${CYAN}  node -e "const fs=require('fs');const p=require.resolve('@anthropic-ai/claude-code/package.json');let c=fs.readFileSync(p.replace('package.json','cli.js'),'utf8');c=c.replace(/function Fd8\\(\\)\\{if\\(Pq\\(\\)!==\\\"firstParty\\\"\\)return!1;if\\(XY\\(\)\)return!1;let q=new Date;return q\\.getFullYear\\(\\)>2026\\|\\|q\\.getFullYear\\(\\)===2026&&q\\.getMonth\\(\\)>=3\\}/g,'function Fd8(){return!0}');fs.writeFileSync(p.replace('package.json','cli.js'),c)"${NC}`);
+    return false;
+  }
+}
+
 // ========== 诊断模式 ==========
 function runDiagnostics() {
   console.log(`${MAGENTA}==============================================${NC}`);
@@ -563,27 +617,40 @@ function main() {
     return;
   }
 
+  // 单独修复 /buddy 模式
+  if (args.includes('--fix-buddy')) {
+    const buddyOk = fixBuddyTimeLock();
+    if (buddyOk) {
+      console.log(`\n${GREEN}修复完成！请重启 Claude Code${NC}\n`);
+    }
+    return;
+  }
+
   const mode = args[0] || 'all';
   let hookOk = null;
   let locOk = null;
+  let buddyOk = null;
 
   switch (mode) {
     case 'hook':
     case '1':
       hookOk = installHook();
       locOk = false;
+      buddyOk = null;
       break;
     case 'localize':
     case '2':
       installLocalize();
       hookOk = null;
       locOk = true;
+      buddyOk = null;
       break;
     case 'all':
     default:
       hookOk = installHook();
       installLocalize();
       locOk = true;
+      buddyOk = fixBuddyTimeLock();
       break;
   }
 
@@ -607,6 +674,12 @@ function main() {
     console.log(`${GREEN}  汉化: 已安装${NC}`);
   } else if (locOk === false) {
     console.log(`${YELLOW}  汉化: 未执行${NC}`);
+  }
+
+  if (buddyOk === true) {
+    console.log(`${GREEN}  /buddy: 已修复时间限制${NC}`);
+  } else if (buddyOk === false) {
+    console.log(`${YELLOW}  /buddy: 修复失败（可能需要管理员权限）${NC}`);
   }
 
   console.log(`${YELLOW}  请重启 Claude Code 使所有更改生效${NC}`);
