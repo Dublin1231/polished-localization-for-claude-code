@@ -399,9 +399,16 @@ function fixBuddyTimeLock() {
     const claudePkgPath = require.resolve('@anthropic-ai/claude-code/package.json');
     cliPath = path.join(path.dirname(claudePkgPath), 'cli.js');
   } catch (err) {
-    console.log(`${YELLOW}警告: 找不到 Claude Code npm 包，跳过 /buddy 修复${NC}`);
-    console.log(`${CYAN}如需修复，请手动运行: npx polished-localization-install --fix-buddy${NC}`);
-    return false;
+    // 备选：使用已知的全局 npm 路径
+    const homedir = require('os').homedir();
+    const knownPath = path.join(homedir, 'AppData', 'Roaming', 'npm', 'node_modules', '@anthropic-ai', 'claude-code', 'cli.js');
+    if (fs.existsSync(knownPath)) {
+      cliPath = knownPath;
+    } else {
+      console.log(`${YELLOW}警告: 找不到 Claude Code npm 包，跳过 /buddy 修复${NC}`);
+      console.log(`${CYAN}如需修复，请手动运行: npx polished-localization-install --fix-buddy${NC}`);
+      return false;
+    }
   }
 
   if (!fs.existsSync(cliPath)) {
