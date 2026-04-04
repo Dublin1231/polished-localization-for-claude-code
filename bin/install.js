@@ -14,6 +14,25 @@ const CYAN = '\x1b[0;36m';
 const NC = '\x1b[0m';
 const IS_WIN = process.platform === 'win32';
 
+const args = process.argv.slice(2);
+
+if (args.includes('--help') || args.includes('-h')) {
+  console.log(`\n${CYAN}用法:${NC}`);
+  console.log(`  polished-localization-install              # 安装全部（汉化 + /buddy 修复）`);
+  console.log(`  polished-localization-install hook          # 仅安装钩子`);
+  console.log(`  polished-localization-install localize      # 仅安装汉化`);
+  console.log(`  --buddy=1-18                              # 指定宠物 (默认随机)`);
+  console.log(`  --verify                                 # 验证安装`);
+  console.log(`  --help                                   # 显示帮助`);
+  console.log(`\n${CYAN}可用宠物:${NC}`);
+  const pets = ['duck', 'goose', 'blob', 'cat', 'dragon', 'octopus', 'owl', 'penguin',
+               'turtle', 'snail', 'ghost', 'axolotl', 'capybara', 'cactus', 'robot',
+               'rabbit', 'mushroom', 'chonk'];
+  pets.forEach((pet, i) => console.log(`  ${i+1}. ${pet}`));
+  console.log('');
+  process.exit(0);
+}
+
 console.log(`\n${MAGENTA}==============================================${NC}`);
 console.log(`${MAGENTA} Polished Localization for Claude Code 安装器${NC}`);
 console.log(`${MAGENTA}==============================================${NC}\n`);
@@ -781,23 +800,19 @@ function runDiagnostics() {
 
 // ========== 主流程 ==========
 function main() {
-  const args = process.argv.slice(2);
-
   // 诊断模式
   if (args.includes('--verify') || args.includes('-v') || args.includes('verify')) {
     runDiagnostics();
     return;
   }
 
-  // 解析宠物选择参数
+  // 解析 --buddy 参数 (1-18)
   let speciesIndex = null;
   const buddyArg = args.find(arg => arg.startsWith('--buddy='));
   if (buddyArg) {
     const index = parseInt(buddyArg.split('=')[1], 10);
-    if (!isNaN(index) && index >= 1 && index <= 18) {
-      speciesIndex = index - 1; // 转换为数组索引（从0开始）
-    } else {
-      console.log(`${RED}无效的宠物索引: ${index} (有效范围: 1-18)${NC}`);
+    if (isNaN(index) || index < 1 || index > 18) {
+      console.log(`${RED}无效的宠物编号: ${index} (有效范围: 1-18)${NC}`);
       console.log(`${CYAN}可用宠物列表:${NC}`);
       const petsDisplay = [
         '鸭子 🦆 (duck)', '鹅 🪿 (goose)', '果冻 🫧 (blob)',
@@ -809,29 +824,7 @@ function main() {
       petsDisplay.forEach((pet, i) => console.log(`  ${i + 1}: ${pet}`));
       return;
     }
-  }
-
-  // 单独修复 /buddy 模式
-  if (args.includes('--fix-buddy')) {
-    const hookOk = installHook();
-    installLocalize();
-    const buddySpeciesArg = args.find(arg => arg.startsWith('--species='));
-    let speciesIndex = null;
-    if (buddySpeciesArg) {
-      const petName = buddySpeciesArg.split('=')[1];
-      const pets = ['duck', 'goose', 'blob', 'cat', 'dragon', 'octopus', 'owl', 'penguin',
-                   'turtle', 'snail', 'ghost', 'axolotl', 'capybara', 'cactus', 'robot',
-                   'rabbit', 'mushroom', 'chonk'];
-      speciesIndex = pets.indexOf(petName);
-      if (speciesIndex === -1) {
-        console.log(`${RED}未知的宠物名称: ${petName}${NC}`);
-        console.log(`${CYAN}可用宠物: ${pets.join(', ')}${NC}`);
-        return;
-      }
-    }
-    const buddyOk = fixBuddyTimeLock(speciesIndex);
-    console.log(`\n${GREEN}✅ 安装完成！汉化和钩子已安装${NC}`);
-    return;
+    speciesIndex = index - 1;
   }
 
   const mode = args[0] || 'all';
@@ -858,8 +851,7 @@ function main() {
       hookOk = installHook();
       installLocalize();
       locOk = true;
-      buddyOk = null;  // 暂时禁用 buddy 修复
-      console.log(`\n${YELLOW}⚠️ Buddy 功能暂时不可用，请等待后续更新${NC}`);
+      buddyOk = fixBuddyTimeLock(speciesIndex);
       break;
   }
 
