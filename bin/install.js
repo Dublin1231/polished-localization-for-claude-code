@@ -481,15 +481,14 @@ function fixBuddyTimeLock(speciesIndex = null) {
     }
 
     // ========== 稳定模式 2: isHidden 属性检查 ==========
-    // 模式: isHidden(){return!Hl8()} 或类似结构
+    // 模式: get isHidden(){return!Hl8()} 或类似结构
     // 这控制 /buddy 命令是否显示
-    const isHiddenPattern = /isHidden\(\)\{return!\w+\(\)\}/;
-    const isHiddenMatch = content.match(isHiddenPattern);
-    if (isHiddenMatch) {
-      const original = isHiddenMatch[0];
-      const patched = 'isHidden(){return!1}';
-      content = content.replace(original, patched);
-      console.log(`${GREEN}✅ 模式2: isHidden 命令可见性已强制显示${NC}`);
+    const isHiddenPattern = /get isHidden\(\)\{return!\w+\(\)\}/g;
+    const isHiddenMatches = content.match(isHiddenPattern);
+    if (isHiddenMatches) {
+      const patched = 'get isHidden(){return!1}';
+      content = content.replace(isHiddenPattern, patched);
+      console.log(`${GREEN}✅ 模式2: isHidden 命令可见性已强制显示 (${isHiddenMatches.length}处)${NC}`);
       patchesApplied++;
     }
 
