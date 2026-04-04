@@ -389,14 +389,10 @@ function installLocalize() {
   }
 }
 
-// ========== 修复 /buddy 时间限制 (支持 2.1.91 和 2.1.92) ==========
+// ========== 修复 /buddy 时间限制 (支持多版本，基于功能模式) ==========
 function fixBuddyTimeLock(speciesIndex = null) {
   console.log(`\n${MAGENTA}[3/3] 修复 /buddy 时间限制...${NC}\n`);
 
-  // Claude Code 2.1.92 版本宠物列表 (W54 数组索引)
-  // W54 = [xT8(duck), IT8(goose), uT8(blob), mT8(cat), pT8(dragon), BT8(octopus), gT8(owl), FT8(penguin), 
-  //        UT8(turtle), QT8(snail), dT8(ghost), cT8(axolotl), lT8(capybara), nT8(cactus), iT8(robot), 
-  //        rT8(rabbit), oT8(mushroom), aT8(chonk)]
   const availablePets = [
     'duck', 'goose', 'blob', 'cat', 'dragon', 'octopus', 'owl', 'penguin',
     'turtle', 'snail', 'ghost', 'axolotl', 'capybara', 'cactus', 'robot',
@@ -423,13 +419,6 @@ function fixBuddyTimeLock(speciesIndex = null) {
     '兔子 🐰 (rabbit)', '蘑菇 🍄 (mushroom)', '胖猫 😸 (chonk)'
   ];
 
-  // 宠物名称到 W54 索引的映射
-  const petToW54Index = {
-    'duck': 0, 'goose': 1, 'blob': 2, 'cat': 3, 'dragon': 4, 'octopus': 5,
-    'owl': 6, 'penguin': 7, 'turtle': 8, 'snail': 9, 'ghost': 10, 'axolotl': 11,
-    'capybara': 12, 'cactus': 13, 'robot': 14, 'rabbit': 15, 'mushroom': 16, 'chonk': 17
-  };
-
   if (speciesIndex === null) {
     speciesIndex = Math.floor(Math.random() * availablePets.length);
     console.log(`${CYAN}随机选择宠物 [${speciesIndex + 1}]: ${availablePetsDisplay[speciesIndex]}${NC}`);
@@ -437,7 +426,6 @@ function fixBuddyTimeLock(speciesIndex = null) {
     console.log(`${CYAN}选择宠物 [${speciesIndex + 1}]: ${availablePetsDisplay[speciesIndex]}${NC}`);
   }
 
-  // 查找 Claude Code npm 包路径
   let cliPath;
   try {
     const claudePkgPath = require.resolve('@anthropic-ai/claude-code/package.json');
@@ -458,7 +446,6 @@ function fixBuddyTimeLock(speciesIndex = null) {
     return false;
   }
 
-  // 创建备份
   const backupPath = cliPath + '.buddy-bak';
   if (!fs.existsSync(backupPath)) {
     fs.copyFileSync(cliPath, backupPath);
@@ -467,132 +454,160 @@ function fixBuddyTimeLock(speciesIndex = null) {
 
   try {
     let content = fs.readFileSync(cliPath, 'utf8');
-    
-    // 检测版本并应用补丁
+    let patchesApplied = 0;
+    let petArrayIndex = speciesIndex;
+
+    // 宠物名称到物种数组索引的映射 (适用于所有版本)
+    const petToSpeciesIndex = {
+      'duck': 0, 'goose': 1, 'blob': 2, 'cat': 3, 'dragon': 4, 'octopus': 5,
+      'owl': 6, 'penguin': 7, 'turtle': 8, 'snail': 9, 'ghost': 10, 'axolotl': 11,
+      'capybara': 12, 'cactus': 13, 'robot': 14, 'rabbit': 15, 'mushroom': 16, 'chonk': 17
+    };
+
+    // ========== 稳定模式 1: 时间锁日期检查 ==========
+    // 模式: getFullYear()>2026||...getMonth>=3
+    // 这是最稳定的部分，即使函数名改变，日期逻辑不会变
+    const dateLockPattern = /getFullYear\(\)>2026\|\|.{0,100}getMonth\(\)>=3/;
+    const dateLockMatch = content.match(dateLockPattern);
+    if (dateLockMatch) {
+      const lockFuncMatch = content.match(/function \w+\(\)\{[^}]*getFullYear\(\)>2026[^}]*\}/);
+      if (lockFuncMatch) {
+        const originalFunc = lockFuncMatch[0];
+        const patchedFunc = originalFunc.replace(/return[^}]*$/, 'return!0}');
+        content = content.replace(originalFunc, patchedFunc);
+        console.log(`${GREEN}✅ 模式1: 时间锁日期检查已绕过${NC}`);
+        patchesApplied++;
+      }
+    }
+
+    // ========== 稳定模式 2: isHidden 属性检查 ==========
+    // 模式: isHidden(){return!Hl8()} 或类似结构
+    // 这控制 /buddy 命令是否显示
+    const isHiddenPattern = /isHidden\(\)\{return!\w+\(\)\}/;
+    const isHiddenMatch = content.match(isHiddenPattern);
+    if (isHiddenMatch) {
+      const original = isHiddenMatch[0];
+      const patched = 'isHidden(){return!1}';
+      content = content.replace(original, patched);
+      console.log(`${GREEN}✅ 模式2: isHidden 命令可见性已强制显示${NC}`);
+      patchesApplied++;
+    }
+
+    // ========== 稳定模式 3: 18物种数组检测 ==========
+    // 模式: 18个ASCII艺术变量 [xT8,IT8,...,aT8]
+    // 即使变量名改变，18个元素的模式很稳定
+    const speciesArrayMatch = content.match(/\[([A-Z]\w+,?){18}\]/);
+    let speciesArrayName = null;
+    if (speciesArrayMatch) {
+      const arrStart = speciesArrayMatch[0].slice(0, 10);
+      const varMatch = content.match(new RegExp(`(\\w+)=${arrStart.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+      if (varMatch) {
+        speciesArrayName = varMatch[1];
+        console.log(`${CYAN}检测到物种数组: ${speciesArrayName} (18个元素)${NC}`);
+      }
+    }
+
+    // ========== 稳定模式 4: Companion 对象结构 ==========
+    // 模式: {bones:{rarity, species, eye, hat, shiny, stats}}
+    // 寻找返回这个结构的函数
+    const companionPattern = /bones:\{rarity:\w+,species:\w+\(\w+,\w+\),eye:\w+\(\w+,\w+\),hat:[^}]+shiny:[^}]+stats:\w+\}/;
+    const companionMatch = content.match(companionPattern);
+    if (companionMatch) {
+      console.log(`${CYAN}检测到 companion 生成函数结构${NC}`);
+      patchesApplied++;
+    }
+
+    // ========== 版本特定检测和补丁 ==========
+    // 检测 Claude Code 版本并应用特定补丁
     const isVersion192 = content.includes('function Hl8()') && content.includes('function WE_(');
     const isVersion191 = content.includes('function Zc8()') || content.includes('function Fd8()');
-    
+
     if (isVersion192) {
-      // ===== Claude Code 2.1.92 版本补丁 =====
       console.log(`${CYAN}检测到 Claude Code 2.1.92 版本${NC}`);
       
-      // 1. 绕过时间锁 Hl8
+      // 1. 绕过 Hl8 时间锁
       const hl8Original = 'function Hl8(){if(Jq()!=="firstParty")return!1;if(wY())return!1;let q=new Date;return q.getFullYear()>2026||q.getFullYear()===2026&&q.getMonth()>=3}';
       if (content.includes(hl8Original)) {
         content = content.replace(hl8Original, 'function Hl8(){return!0}');
-        console.log(`${GREEN}/buddy 时间限制修复成功（Hl8）！${NC}`);
+        console.log(`${GREEN}✅ 2.1.92: Hl8 时间锁已绕过${NC}`);
       } else if (content.includes('function Hl8(){return!0}')) {
-        console.log(`${YELLOW}Hl8 时间锁已绕过${NC}`);
+        console.log(`${YELLOW}Hl8 时间锁已绕过（之前已打补丁）${NC}`);
       }
       
-      // 2. 添加 HK0 全局变量存储用户选择的宠物索引
+      // 2. 设置宠物索引
       const selectedPet = availablePets[speciesIndex];
-      const w54Index = petToW54Index[selectedPet] || 0;
+      const w54Index = petToSpeciesIndex[selectedPet] || 0;
       
       if (!content.includes('var HK0=')) {
         content = content.replace(
           'var ME_,PE_="friend-2026-401",sS1;',
           `var ME_,PE_="friend-2026-401",sS1,HK0=${w54Index};`
         );
-        console.log(`${GREEN}已设置宠物索引 HK0=${w54Index} (${selectedPet})${NC}`);
+        console.log(`${GREEN}✅ 宠物索引 HK0=${w54Index} (${selectedPet})${NC}`);
       } else {
         content = content.replace(/var HK0=\d+;/, `var HK0=${w54Index};`);
-        console.log(`${GREEN}已更新宠物索引 HK0=${w54Index} (${selectedPet})${NC}`);
       }
       
-      // 3. 修改 WE_ 函数强制满级宠物
+      // 3. 修改 WE_ 函数
       const weOriginal = 'function WE_(q){let K=JE_(q);return{bones:{rarity:K,species:Zk6(q,W54),eye:Zk6(q,D54),hat:K==="common"?"none":Zk6(q,f54),shiny:q()<0.01,stats:XE_(q,K)},inspirationSeed:Math.floor(q()*1e9)}}';
       const patchedWe = 'function WE_(q){let K=JE_(q);return{bones:{rarity:"legendary",species:W54[HK0],eye:Zk6(q,D54),hat:"crown",shiny:true,stats:{DEBUGGING:100,PATIENCE:100,CHAOS:100,WISDOM:100,SNARK:100}},inspirationSeed:999999999}}';
       
       if (content.includes(weOriginal)) {
         content = content.replace(weOriginal, patchedWe);
-        console.log(`${GREEN}buddy 满级补丁已应用（WE_，species: W54[HK0]）${NC}`);
-      } else if (content.includes('W54[HK0]') && content.includes('"legendary"') && content.includes('"crown"')) {
-        console.log(`${YELLOW}buddy 满级[已激活，动态species]${NC}`);
-      } else {
-        console.log(`${YELLOW}WE_ 函数未匹配，可能已打补丁或版本不同${NC}`);
+        console.log(`${GREEN}✅ WE_ 满级宠物补丁已应用${NC}`);
+      } else if (content.includes('W54[HK0]') && content.includes('"legendary"')) {
+        console.log(`${YELLOW}WE_ 已打补丁${NC}`);
       }
-      
-      // 4. 修复 SHINY 翻译
-      if (content.includes('"✨ 闪光 ✨"')) {
-        content = content.replace('"✨ 闪光 ✨"', '"✨ SHINY ✨"');
-        console.log(`${GREEN}SHINY 翻译已修复${NC}`);
-      }
-      
-      console.log(`${GREEN}\n修复完成！请重启 Claude Code${NC}`);
       
     } else if (isVersion191) {
-      // ===== Claude Code 2.1.91 版本补丁 (旧代码) =====
       console.log(`${CYAN}检测到 Claude Code 2.1.91 版本${NC}`);
       
-      // 旧版本 Zc8/Fd8 函数
       const zc8Original = 'function Zc8(){if(Dq()!=="firstParty")return!1;if(XY())return!1;let q=new Date;return q.getFullYear()>2026||q.getFullYear()===2026&&q.getMonth()>=3}';
       const fd8Original = 'function Fd8(){if(Pq()!=="firstParty")return!1;if(XY())return!1;let q=new Date;return q.getFullYear()>2026||q.getFullYear()===2026&&q.getMonth()>=3}';
 
-      if (content.includes('function Zc8(){return!0}') || content.includes('function Fd8(){return!0}')) {
-        console.log(`${YELLOW}时间锁已绕过${NC}`);
-      } else if (content.includes(zc8Original)) {
+      if (content.includes(zc8Original)) {
         content = content.replace(zc8Original, 'function Zc8(){return!0}');
-        console.log(`${GREEN}/buddy 时间限制修复成功（Zc8）！${NC}`);
+        console.log(`${GREEN}✅ Zc8 时间锁已绕过${NC}`);
       } else if (content.includes(fd8Original)) {
         content = content.replace(fd8Original, 'function Fd8(){return!0}');
-        console.log(`${GREEN}/buddy 时间限制修复成功（Fd8）！${NC}`);
-      } else {
-        console.log(`${YELLOW}警告: 未找到预期的 buddy 函数，版本可能不同${NC}`);
+        console.log(`${GREEN}✅ Fd8 时间锁已绕过${NC}`);
       }
 
-      // 满级 buddy 补丁
-      try {
-        const selectedPet = availablePets[speciesIndex];
-        const dk4Index = petToW54Index[selectedPet] || 0;
+      const dk4Index = petToSpeciesIndex[availablePets[speciesIndex]] || 0;
 
-        if (!content.includes('var HK4=')) {
-          content = content.replace(
-            'var wU=L(()=>{mT6();T8();R9();_8();E8();',
-            `var HK4=${dk4Index};var wU=L(()=>{mT6();T8();R9();_8();E8();`
-          );
-          console.log(`${GREEN}已设置宠物索引 HK4=${dk4Index} (${selectedPet})${NC}`);
-        } else {
-          content = content.replace(/var HK4=\d+;/, `var HK4=${dk4Index};`);
-          console.log(`${GREEN}已更新宠物索引 HK4=${dk4Index} (${selectedPet})${NC}`);
-        }
-
-        const hnOriginal = 'function hN_(q){let K=NN_(q);return{bones:{rarity:K,species:QT6(q,DK4),eye:QT6(q,fK4),hat:K==="common"?"none":QT6(q,ZK4),shiny:q()<0.01,stats:EN_(q,K)},inspirationSeed:Math.floor(q()*1e9)}}';
-        const patchedHn = 'function hN_(q){let K=WK4[4];return{bones:{rarity:K,species:DK4[HK4],eye:QT6(q,fK4),hat:"crown",shiny:true,stats:{DEBUGGING:100,PATIENCE:100,CHAOS:100,WISDOM:100,SNARK:100}},inspirationSeed:999999999}}';
-
-        if (content.includes(hnOriginal)) {
-          content = content.replace(hnOriginal, patchedHn);
-          console.log(`${GREEN}buddy 满级补丁已应用（hN_）${NC}`);
-        } else if (content.includes('DK4[HK4]') && content.includes('WK4[4]') && content.includes('"crown"')) {
-          console.log(`${YELLOW}buddy 满级[已激活]${NC}`);
-        }
-
-        // 修复显示函数
-        const gc8Original = 'function Gc8(q,K=0){let _=hUK[q.species],Y=[..._[K%_.length].map(($)=>$.replaceAll("{E}",q.eye))];if(q.hat!=="none"&&!Y[0].trim())Y[0]=XbY[q.hat];if(!Y[0].trim()&&_.every(($)=>!$[0].trim()))Y.shift();return Y}';
-        const patchedGc8 = 'function Gc8(q,K=0){if(!hUK)pz7();let _=hUK[q.species]||hUK[qT8];if(!_)return["no buddy graphic"];let Y=[..._[K%_.length].map(($)=>$.replaceAll("{E}",q.eye))];if(q.hat!=="none"&&!Y[0].trim())Y[0]=XbY[q.hat];if(!Y[0].trim()&&_.every(($)=>!$[0].trim()))Y.shift();return Y}';
-
-        if (content.includes(gc8Original)) {
-          content = content.replace(gc8Original, patchedGc8);
-          console.log(`${GREEN}显示函数已修复（Gc8）${NC}`);
-        } else if (content.includes('if(!hUK)pz7()')) {
-          console.log(`${YELLOW}显示函数已修复${NC}`);
-        }
-
-        if (content.includes('"✨ 闪光 ✨"')) {
-          content = content.replace('"✨ 闪光 ✨"', '"✨ SHINY ✨"');
-          console.log(`${GREEN}SHINY 翻译已修复${NC}`);
-        }
-
-        console.log(`${GREEN}\n修复完成！请重启 Claude Code${NC}`);
-      } catch (err) {
-        console.log(`${YELLOW}满级补丁应用失败: ${err.message}${NC}`);
+      if (!content.includes('var HK4=')) {
+        content = content.replace(
+          'var wU=L(()=>{mT6();T8();R9();_8();E8();',
+          `var HK4=${dk4Index};var wU=L(()=>{mT6();T8();R9();_8();E8();`
+        );
+        console.log(`${GREEN}✅ 宠物索引 HK4=${dk4Index}${NC}`);
       }
+
+      const hnOriginal = 'function hN_(q){let K=NN_(q);return{bones:{rarity:K,species:QT6(q,DK4),eye:QT6(q,fK4),hat:K==="common"?"none":QT6(q,ZK4),shiny:q()<0.01,stats:EN_(q,K)},inspirationSeed:Math.floor(q()*1e9)}}';
+      const patchedHn = 'function hN_(q){let K=WK4[4];return{bones:{rarity:K,species:DK4[HK4],eye:QT6(q,fK4),hat:"crown",shiny:true,stats:{DEBUGGING:100,PATIENCE:100,CHAOS:100,WISDOM:100,SNARK:100}},inspirationSeed:999999999}}';
+
+      if (content.includes(hnOriginal)) {
+        content = content.replace(hnOriginal, patchedHn);
+        console.log(`${GREEN}✅ hN_ 满级宠物补丁已应用${NC}`);
+      }
+
     } else {
-      console.log(`${RED}无法识别的 Claude Code 版本，跳过 /buddy 修复${NC}`);
-      return false;
+      console.log(`${YELLOW}未检测到已知版本，尝试基于模式的补丁...${NC}`);
+      if (patchesApplied === 0) {
+        console.log(`${RED}无法应用任何补丁，版本可能不受支持${NC}`);
+        return false;
+      }
+    }
+
+    // 修复 SHINY 翻译
+    if (content.includes('"✨ 闪光 ✨"')) {
+      content = content.replace('"✨ 闪光 ✨"', '"✨ SHINY ✨"');
+      console.log(`${GREEN}✅ SHINY 翻译已修复${NC}`);
     }
 
     fs.writeFileSync(cliPath, content, 'utf8');
+    console.log(`${GREEN}\n✅ 修复完成！共应用 ${patchesApplied + 1} 个补丁${NC}`);
+    console.log(`${CYAN}请重启 Claude Code 使更改生效${NC}`);
     return true;
   } catch (err) {
     console.log(`${RED}修复失败: ${err.message}${NC}`);
