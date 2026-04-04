@@ -22,3 +22,6 @@ npm-debug.log*
 # NPM sensitive
 .npmrc
 .npm_token
+
+# Claude Code 源码目录
+"claudecode源码/"
