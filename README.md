@@ -463,9 +463,9 @@ polished-localization-for-claude-code/
 
 | 平台 | 状态 | 测试内容 |
 |-----|------|---------|
-| 🐧 Linux (Ubuntu) | ✅ 通过 | Hook脚本语法 + 界面汉化 (595词条) |
-| 🍎 macOS | ✅ 通过 | Hook脚本语法 + 界面汉化 (595词条) |
-| 🪟 Windows | ✅ 通过 | Hook脚本语法 + 界面汉化 (595词条) |
+| 🐧 Linux (Ubuntu) | ✅ 通过 | Hook脚本语法 + 界面汉化 (376词条) |
+| 🍎 macOS | ✅ 通过 | Hook脚本语法 + 界面汉化 (376词条) |
+| 🪟 Windows | ✅ 通过 | Hook脚本语法 + 界面汉化 (376词条) |
 
 ### 测试覆盖
 
