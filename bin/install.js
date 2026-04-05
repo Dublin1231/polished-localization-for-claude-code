@@ -582,30 +582,45 @@ function fixBuddyTimeLock(speciesIndex = null) {
         console.log(`${GREEN}✅ 2.1.92: Hl8 时间锁已绕过${NC}`);
       }
       
-      // 2. 设置宠物索引
+      // 2. 设置宠物索引（版本通用：提取变量名）
       const selectedPet = availablePets[speciesIndex];
       const w54Index = petToSpeciesIndex[selectedPet] || 0;
-      const originalMELoading = 'var ME_,PE_="friend-2026-401",sS1;';
       
-      if (content.includes(originalMELoading)) {
-        content = content.replace(
-          originalMELoading,
-          `var ME_,PE_="friend-2026-401",sS1,HK0=${w54Index};`
-        );
-        console.log(`${GREEN}✅ 宠物索引 HK0=${w54Index} (${selectedPet})${NC}`);
-      } else if (content.includes('HK0=')) {
-        console.log(`${YELLOW}HK0 已声明，跳过${NC}`);
+      // 匹配宠物数组: W54= 或 DK4= 或其他
+      const petArrayMatch = content.match(/(W54|DK4|[A-Z]\d)\s*=\s*\[/);
+      // 匹配宠物初始化: var XXX="friend-2026-401",...
+      const petInitMatch = content.match(/var\s+(\w+),(\w+)\s*=\s*"friend-2026-401",[^;]+;/);
+      
+      if (petArrayMatch && petInitMatch) {
+        const petArrayVar = petArrayMatch[1];  // W54 或其他
+        const petIndexVar = petInitMatch[2];    // PE_ 或 HK0 或其他
+        
+        // 替换原始初始化代码
+        const originalInit = petInitMatch[0];
+        const patchedInit = `var ${petInitMatch[1]},${petIndexVar}="friend-2026-401",sS1,${petIndexVar}=${w54Index};`;
+        
+        content = content.replace(originalInit, patchedInit);
+        console.log(`${GREEN}✅ 宠物索引 ${petIndexVar}=${w54Index} (${selectedPet}, ${petArrayVar} 数组)${NC}`);
+        
+        // 3. 修改 stats 函数
+        // 匹配返回 bones 对象的函数
+        const statsFuncMatch = content.match(/function\s+\w+\(q\)\{let\s+K=JE_\(q\);return\s*\{bones:\{rarity:K,species:\w+\([^)]+\),[^}]*\}\}/);
+        
+        if (statsFuncMatch) {
+          const originalFunc = statsFuncMatch[0];
+          const funcNameMatch = originalFunc.match(/function\s+(\w+)/);
+          const funcName = funcNameMatch ? funcNameMatch[1] : 'WE_';
+          
+          // 构建新函数
+          const patchedFunc = `function ${funcName}(q){let K=JE_(q);return{bones:{rarity:"legendary",species:${petArrayVar}[${petIndexVar}],eye:null,hat:"crown",shiny:true,stats:{DEBUGGING:100,PATIENCE:100,CHAOS:100,WISDOM:100,SNARK:100}},inspirationSeed:999999999}}`;
+          
+          content = content.replace(originalFunc, patchedFunc);
+          console.log(`${GREEN}✅ ${funcName} 满级宠物补丁已应用${NC}`);
+        }
+      } else if (content.includes('W54[HK0]') || content.includes('W54[')) {
+        console.log(`${YELLOW}宠物已打补丁，跳过${NC}`);
       } else {
-        console.log(`${YELLOW}未找到原始宠物加载代码${NC}`);
-      }
-      
-      // 3. 修改 WE_ 函数
-      const weOriginal = 'function WE_(q){let K=JE_(q);return{bones:{rarity:K,species:Zk6(q,W54),eye:Zk6(q,D54),hat:K==="common"?"none":Zk6(q,f54),shiny:q()<0.01,stats:XE_(q,K)},inspirationSeed:Math.floor(q()*1e9)}}';
-      const patchedWe = 'function WE_(q){let K=JE_(q);return{bones:{rarity:"legendary",species:W54[HK0],eye:Zk6(q,D54),hat:"crown",shiny:true,stats:{DEBUGGING:100,PATIENCE:100,CHAOS:100,WISDOM:100,SNARK:100}},inspirationSeed:999999999}}';
-      
-      if (content.includes(weOriginal)) {
-        content = content.replace(weOriginal, patchedWe);
-        console.log(`${GREEN}✅ WE_ 满级宠物补丁已应用${NC}`);
+        console.log(`${YELLOW}未找到宠物加载代码${NC}`);
       }
       
     } else if (isVersion191 && !hasHK4Declaration) {
@@ -626,29 +641,44 @@ function fixBuddyTimeLock(speciesIndex = null) {
 
       const dk4Index = petToSpeciesIndex[availablePets[speciesIndex]] || 0;
 
-      // 保守策略：只检测原始代码是否存在，不检测"已打补丁"状态
-      const originalWULoading = 'var wU=L(()=>{mT6();T8();R9();_8();E8();';
+      // 使用正则提取变量名，实现版本通用
+      // 匹配宠物数组变量声明: DK4= 或 W54= 或 XY1= 后面跟数组定义
+      const petArrayVarMatch = content.match(/(DK4|W54|[A-Z]\d)\s*=\s*\[/);
+      // 匹配宠物初始化函数: var XXX=L(()=>{...mT6();T8();R9();_8();E8();}
+      const petInitVarMatch = content.match(/var\s+(\w+)\s*=\s*L\(\(\)=>\{[^}]*mT6\(\)[^}]*T8\(\)[^}]*R9\(\)[^}]*_8\(\)[^}]*E8\(\);/);
       
-      if (content.includes(originalWULoading)) {
-        content = content.replace(
-          originalWULoading,
-          `var HK4=${dk4Index};var wU=L(()=>{mT6();T8();R9();_8();E8();`
-        );
-        console.log(`${GREEN}✅ 宠物索引 HK4=${dk4Index}${NC}`);
-      } else if (content.includes('DK4[HK4]')) {
-        console.log(`${YELLOW}HK4 已声明，跳过${NC}`);
+      if (petArrayVarMatch && petInitVarMatch) {
+        const petArrayVar = petArrayVarMatch[1];  // DK4 或 W54 或其他
+        const petInitVar = petInitVarMatch[1];   // wU 或 XY1 或其他
+        const petIndexVar = petInitVar;          // 宠物索引变量名（和初始化变量同名）
+        
+        // 构建补丁
+        const petInitOriginal = petInitVarMatch[0];
+        const petInitPatched = `var ${petIndexVar}=${dk4Index};${petInitOriginal.replace('var ', '')}`;
+        
+        content = content.replace(petInitOriginal, petInitPatched);
+        console.log(`${GREEN}✅ 宠物索引 ${petIndexVar}=${dk4Index} (${petArrayVar} 数组)${NC}`);
+        
+        // 找到并替换 stats 函数
+        // 匹配返回 bones:{rarity, species, eye, hat, shiny, stats} 的函数
+        const statsFuncMatch = content.match(/function\s+\w+\(q\)\{[^}]*return\s*\{bones:\{rarity:\w+,species:\w+\([^)]+\),[^}]*\}\}/);
+        
+        if (statsFuncMatch) {
+          const originalFunc = statsFuncMatch[0];
+          // 提取函数名
+          const funcNameMatch = originalFunc.match(/function\s+(\w+)/);
+          const funcName = funcNameMatch ? funcNameMatch[1] : 'unknown';
+          
+          // 构建新的 stats 函数（使用动态变量名）
+          const patchedFunc = `function ${funcName}(q){let K="${petArrayVar}[${petIndexVar}]";return{bones:{rarity:"legendary",species:${petArrayVar}[${petIndexVar}],eye:null,hat:"crown",shiny:true,stats:{DEBUGGING:100,PATIENCE:100,CHAOS:100,WISDOM:100,SNARK:100}},inspirationSeed:999999999}}`;
+          
+          content = content.replace(originalFunc, patchedFunc);
+          console.log(`${GREEN}✅ ${funcName} 满级宠物补丁已应用${NC}`);
+        }
+      } else if (content.includes('DK4[HK4]') || content.includes('W54[HK0]')) {
+        console.log(`${YELLOW}宠物已打补丁，跳过${NC}`);
       } else {
-        console.log(`${YELLOW}未找到原始宠物加载代码${NC}`);
-      }
-
-      const hnOriginal = 'function hN_(q){let K=NN_(q);return{bones:{rarity:K,species:QT6(q,DK4),eye:QT6(q,fK4),hat:K==="common"?"none":QT6(q,ZK4),shiny:q()<0.01,stats:EN_(q,K)},inspirationSeed:Math.floor(q()*1e9)}}';
-      const patchedHn = 'function hN_(q){let K=WK4[4];return{bones:{rarity:K,species:DK4[HK4],eye:QT6(q,fK4),hat:"crown",shiny:true,stats:{DEBUGGING:100,PATIENCE:100,CHAOS:100,WISDOM:100,SNARK:100}},inspirationSeed:999999999}}';
-
-      if (content.includes(hnOriginal)) {
-        content = content.replace(hnOriginal, patchedHn);
-        console.log(`${GREEN}✅ hN_ 满级宠物补丁已应用${NC}`);
-      } else if (content.includes('DK4[HK4]')) {
-        console.log(`${YELLOW}hN_ 已打补丁，跳过${NC}`);
+        console.log(`${YELLOW}未找到宠物初始化代码${NC}`);
       }
 
     } else {

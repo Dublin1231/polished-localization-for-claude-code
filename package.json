@@ -1,6 +1,6 @@
 {
   "name": "polished-localization-for-claude-code",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Polished Localization for Claude Code 是一个面向 Claude Code 的高质量中文本地化与可用性增强工具包，不仅提供完整的界面翻译，还通过上下文感知的工具提示把每一步操作解释清楚，帮助用户快速理解 Claude 在做什么、为什么这么做。项目覆盖 Windows/macOS/Linux 跨平台安装与恢复流程，内置可维护的词条映射与替换机制，支持持续扩展和版本迭代，适合个人开发者、中文团队以及希望构建稳定中文开发体验的场景。",
   "main": "index.js",
   "scripts": {
