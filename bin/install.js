@@ -617,29 +617,31 @@ function fixBuddyTimeLock(speciesIndex = null) {
 
       const dk4Index = petToSpeciesIndex[availablePets[speciesIndex]] || 0;
 
-      // 检查最终形式
-      if (content.includes('DK4[HK4]') && content.includes('DEBUGGING:100')) {
-        console.log(`${YELLOW}宠物索引已设置（之前已打补丁）${NC}`);
-      } else if (!content.includes('var HK4=')) {
-        const hk4Match = content.match(/var HK4=\d+;/);
-        if (hk4Match) {
-          content = content.replace(hk4Match[0], `var HK4=${dk4Index};`);
-        } else {
+      // 检测 HK4 是否已经声明过（检查是否已打补丁）
+      // 已打补丁的标志：HK4=X;var wU= 或 var HK4=X;
+      const hk4AlreadyDeclared = /HK4=\d+;/.test(content) || /var HK4=\d+;/.test(content);
+      
+      // 检测 hN_ 是否已打补丁（最终形式）
+      const hnAlreadyPatched = content.includes('DK4[HK4]') && content.includes('DEBUGGING:100');
+      
+      if (hk4AlreadyDeclared || hnAlreadyPatched) {
+        console.log(`${YELLOW}检测到 2.1.91 宠物代码已被处理过，跳过 HK4 处理${NC}`);
+      } else {
+        // 只有在 HK4 未声明时才添加
+        const hasOriginalWULoading = content.includes('var wU=L(()=>{mT6();T8();R9();_8();E8();');
+        if (hasOriginalWULoading) {
           content = content.replace(
             'var wU=L(()=>{mT6();T8();R9();_8();E8();',
             `var HK4=${dk4Index};var wU=L(()=>{mT6();T8();R9();_8();E8();`
           );
+          console.log(`${GREEN}✅ 宠物索引 HK4=${dk4Index}${NC}`);
         }
-        console.log(`${GREEN}✅ 宠物索引 HK4=${dk4Index}${NC}`);
-      } else {
-        content = content.replace(/var HK4=\d+;/, `var HK4=${dk4Index};`);
-        console.log(`${GREEN}✅ 更新宠物索引 HK4=${dk4Index}${NC}`);
       }
 
       const hnOriginal = 'function hN_(q){let K=NN_(q);return{bones:{rarity:K,species:QT6(q,DK4),eye:QT6(q,fK4),hat:K==="common"?"none":QT6(q,ZK4),shiny:q()<0.01,stats:EN_(q,K)},inspirationSeed:Math.floor(q()*1e9)}}';
       const patchedHn = 'function hN_(q){let K=WK4[4];return{bones:{rarity:K,species:DK4[HK4],eye:QT6(q,fK4),hat:"crown",shiny:true,stats:{DEBUGGING:100,PATIENCE:100,CHAOS:100,WISDOM:100,SNARK:100}},inspirationSeed:999999999}}';
 
-      if (content.includes('DK4[HK4]') && content.includes('DEBUGGING:100')) {
+      if (hnAlreadyPatched) {
         console.log(`${YELLOW}hN_ 已打补丁${NC}`);
       } else if (content.includes(hnOriginal)) {
         content = content.replace(hnOriginal, patchedHn);
