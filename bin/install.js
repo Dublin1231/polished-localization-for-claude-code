@@ -16,6 +16,11 @@ const IS_WIN = process.platform === 'win32';
 
 const args = process.argv.slice(2);
 
+if (args.includes('--version') || args.includes('-v')) {
+  console.log(`${pkg.version}`);
+  process.exit(0);
+}
+
 if (args.includes('--help') || args.includes('-h')) {
   console.log(`\n${CYAN}用法:${NC}`);
   console.log(`  polished-localization-install              # 安装全部（汉化 + /buddy 修复）`);
@@ -23,7 +28,10 @@ if (args.includes('--help') || args.includes('-h')) {
   console.log(`  polished-localization-install localize      # 仅安装汉化`);
   console.log(`  --buddy=1-18                              # 指定宠物 (默认随机)`);
   console.log(`  --verify                                 # 验证安装`);
+  console.log(`  --version                                # 显示版本`);
   console.log(`  --help                                   # 显示帮助`);
+  console.log(`\n${CYAN}恢复:${NC}`);
+  console.log(`  polished-localization-restore              # 切换为英文界面`);
   console.log(`\n${CYAN}可用宠物:${NC}`);
   const pets = ['duck', 'goose', 'blob', 'cat', 'dragon', 'octopus', 'owl', 'penguin',
                'turtle', 'snail', 'ghost', 'axolotl', 'capybara', 'cactus', 'robot',

@@ -30,7 +30,7 @@ try {
     fs.copyFileSync(cliBak, cliPath);
     console.log(`${GREEN}已恢复为英文界面${NC}`);
   } else {
-    console.log(`${YELLOW}未找到备份文件，可能已经是英文版${NC}`);
+    console.log(`${YELLOW}未找到备份文件${NC}`);
   }
 } catch (err) {
   console.log(`${RED}恢复失败: ${err.message}${NC}`);
