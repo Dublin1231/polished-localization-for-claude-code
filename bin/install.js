@@ -497,6 +497,15 @@ function fixBuddyTimeLock(speciesIndex = null) {
       console.log(`${CYAN}如需重新打补丁，请先恢复原始文件: polished-localization-restore${NC}`);
       return true;
     }
+    
+    // ========== 防止 HK4/HK0 重复声明的全局检查 ==========
+    const hasHK4Declaration = /HK4\s*=\s*\d+/.test(content);
+    const hasHK0Declaration = /HK0\s*=\s*\d+/.test(content);
+    
+    if (hasHK4Declaration || hasHK0Declaration) {
+      console.log(`${YELLOW}检测到宠物变量已声明，跳过宠物相关补丁${NC}`);
+      console.log(`${YELLOW}如需重新打补丁，请先运行: polished-localization-restore${NC}`);
+    }
 
     // 宠物名称到物种数组索引的映射 (适用于所有版本)
     const petToSpeciesIndex = {
@@ -558,11 +567,10 @@ function fixBuddyTimeLock(speciesIndex = null) {
     }
 
     // ========== 版本特定检测和补丁 ==========
-    // 检测 Claude Code 版本并应用特定补丁
     const isVersion192 = content.includes('function Hl8()') && content.includes('function WE_(');
-    const isVersion191 = content.includes('function Zc8()') || content.includes('function Fd8()');
+    const isVersion191 = content.includes('function Zc8()') && content.includes('function Fd8()');
 
-    if (isVersion192) {
+    if (isVersion192 && !hasHK0Declaration) {
       console.log(`${CYAN}检测到 Claude Code 2.1.92 版本${NC}`);
       
       // 1. 绕过 Hl8 时间锁
@@ -574,11 +582,9 @@ function fixBuddyTimeLock(speciesIndex = null) {
         console.log(`${GREEN}✅ 2.1.92: Hl8 时间锁已绕过${NC}`);
       }
       
-      // 2. 设置宠物索引（检查最终形式）
+      // 2. 设置宠物索引
       const selectedPet = availablePets[speciesIndex];
       const w54Index = petToSpeciesIndex[selectedPet] || 0;
-      
-      // 保守策略：只检测原始代码是否存在
       const originalMELoading = 'var ME_,PE_="friend-2026-401",sS1;';
       
       if (content.includes(originalMELoading)) {
@@ -602,7 +608,7 @@ function fixBuddyTimeLock(speciesIndex = null) {
         console.log(`${GREEN}✅ WE_ 满级宠物补丁已应用${NC}`);
       }
       
-    } else if (isVersion191) {
+    } else if (isVersion191 && !hasHK4Declaration) {
       console.log(`${CYAN}检测到 Claude Code 2.1.91 版本${NC}`);
       
       const zc8Original = 'function Zc8(){if(Dq()!=="firstParty")return!1;if(XY())return!1;let q=new Date;return q.getFullYear()>2026||q.getFullYear()===2026&&q.getMonth()>=3}';
