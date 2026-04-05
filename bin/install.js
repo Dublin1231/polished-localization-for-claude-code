@@ -476,6 +476,20 @@ function fixBuddyTimeLock(speciesIndex = null) {
     let patchesApplied = 0;
     let petArrayIndex = speciesIndex;
 
+    // ========== 检查是否已完全打补丁（防止重复应用）==========
+    // 检查最终补丁形式而不是中间形式
+    const alreadyPatched = 
+      (content.includes('get isHidden(){return!1}') && 
+       (content.includes('"legendary"') || content.includes('DEBUGGING:100'))) ||
+      (content.includes('W54[HK0]') && content.includes('DEBUGGING:100')) ||
+      (content.includes('DK4[HK4]') && content.includes('DEBUGGING:100'));
+    
+    if (alreadyPatched) {
+      console.log(`${YELLOW}检测到 Buddy 已打补丁，跳过重复应用${NC}`);
+      console.log(`${CYAN}如需重新打补丁，请先恢复原始文件: polished-localization-restore${NC}`);
+      return true;
+    }
+
     // 宠物名称到物种数组索引的映射 (适用于所有版本)
     const petToSpeciesIndex = {
       'duck': 0, 'goose': 1, 'blob': 2, 'cat': 3, 'dragon': 4, 'octopus': 5,
@@ -545,36 +559,44 @@ function fixBuddyTimeLock(speciesIndex = null) {
       
       // 1. 绕过 Hl8 时间锁
       const hl8Original = 'function Hl8(){if(Jq()!=="firstParty")return!1;if(wY())return!1;let q=new Date;return q.getFullYear()>2026||q.getFullYear()===2026&&q.getMonth()>=3}';
-      if (content.includes(hl8Original)) {
+      if (content.includes('function Hl8(){return!0}')) {
+        console.log(`${YELLOW}Hl8 时间锁已绕过（之前已打补丁）${NC}`);
+      } else if (content.includes(hl8Original)) {
         content = content.replace(hl8Original, 'function Hl8(){return!0}');
         console.log(`${GREEN}✅ 2.1.92: Hl8 时间锁已绕过${NC}`);
-      } else if (content.includes('function Hl8(){return!0}')) {
-        console.log(`${YELLOW}Hl8 时间锁已绕过（之前已打补丁）${NC}`);
       }
       
-      // 2. 设置宠物索引
+      // 2. 设置宠物索引（检查最终形式）
       const selectedPet = availablePets[speciesIndex];
       const w54Index = petToSpeciesIndex[selectedPet] || 0;
       
-      if (!content.includes('var HK0=')) {
-        content = content.replace(
-          'var ME_,PE_="friend-2026-401",sS1;',
-          `var ME_,PE_="friend-2026-401",sS1,HK0=${w54Index};`
-        );
+      if (content.includes('W54[HK0]') && content.includes('DEBUGGING:100')) {
+        console.log(`${YELLOW}宠物索引已设置（之前已打补丁）${NC}`);
+      } else if (!content.includes('var HK0=')) {
+        const hk0Match = content.match(/var HK0=\d+;/);
+        if (hk0Match) {
+          content = content.replace(hk0Match[0], `var HK0=${w54Index};`);
+        } else {
+          content = content.replace(
+            'var ME_,PE_="friend-2026-401",sS1;',
+            `var ME_,PE_="friend-2026-401",sS1,HK0=${w54Index};`
+          );
+        }
         console.log(`${GREEN}✅ 宠物索引 HK0=${w54Index} (${selectedPet})${NC}`);
       } else {
         content = content.replace(/var HK0=\d+;/, `var HK0=${w54Index};`);
+        console.log(`${GREEN}✅ 更新宠物索引 HK0=${w54Index}${NC}`);
       }
       
-      // 3. 修改 WE_ 函数
+      // 3. 修改 WE_ 函数（检查最终形式）
       const weOriginal = 'function WE_(q){let K=JE_(q);return{bones:{rarity:K,species:Zk6(q,W54),eye:Zk6(q,D54),hat:K==="common"?"none":Zk6(q,f54),shiny:q()<0.01,stats:XE_(q,K)},inspirationSeed:Math.floor(q()*1e9)}}';
       const patchedWe = 'function WE_(q){let K=JE_(q);return{bones:{rarity:"legendary",species:W54[HK0],eye:Zk6(q,D54),hat:"crown",shiny:true,stats:{DEBUGGING:100,PATIENCE:100,CHAOS:100,WISDOM:100,SNARK:100}},inspirationSeed:999999999}}';
       
-      if (content.includes(weOriginal)) {
+      if (content.includes('W54[HK0]') && content.includes('"legendary"')) {
+        console.log(`${YELLOW}WE_ 已打补丁${NC}`);
+      } else if (content.includes(weOriginal)) {
         content = content.replace(weOriginal, patchedWe);
         console.log(`${GREEN}✅ WE_ 满级宠物补丁已应用${NC}`);
-      } else if (content.includes('W54[HK0]') && content.includes('"legendary"')) {
-        console.log(`${YELLOW}WE_ 已打补丁${NC}`);
       }
       
     } else if (isVersion191) {
@@ -583,7 +605,9 @@ function fixBuddyTimeLock(speciesIndex = null) {
       const zc8Original = 'function Zc8(){if(Dq()!=="firstParty")return!1;if(XY())return!1;let q=new Date;return q.getFullYear()>2026||q.getFullYear()===2026&&q.getMonth()>=3}';
       const fd8Original = 'function Fd8(){if(Pq()!=="firstParty")return!1;if(XY())return!1;let q=new Date;return q.getFullYear()>2026||q.getFullYear()===2026&&q.getMonth()>=3}';
 
-      if (content.includes(zc8Original)) {
+      if (content.includes('function Zc8(){return!0}') || content.includes('function Fd8(){return!0}')) {
+        console.log(`${YELLOW}时间锁已绕过（之前已打补丁）${NC}`);
+      } else if (content.includes(zc8Original)) {
         content = content.replace(zc8Original, 'function Zc8(){return!0}');
         console.log(`${GREEN}✅ Zc8 时间锁已绕过${NC}`);
       } else if (content.includes(fd8Original)) {
@@ -593,18 +617,31 @@ function fixBuddyTimeLock(speciesIndex = null) {
 
       const dk4Index = petToSpeciesIndex[availablePets[speciesIndex]] || 0;
 
-      if (!content.includes('var HK4=')) {
-        content = content.replace(
-          'var wU=L(()=>{mT6();T8();R9();_8();E8();',
-          `var HK4=${dk4Index};var wU=L(()=>{mT6();T8();R9();_8();E8();`
-        );
+      // 检查最终形式
+      if (content.includes('DK4[HK4]') && content.includes('DEBUGGING:100')) {
+        console.log(`${YELLOW}宠物索引已设置（之前已打补丁）${NC}`);
+      } else if (!content.includes('var HK4=')) {
+        const hk4Match = content.match(/var HK4=\d+;/);
+        if (hk4Match) {
+          content = content.replace(hk4Match[0], `var HK4=${dk4Index};`);
+        } else {
+          content = content.replace(
+            'var wU=L(()=>{mT6();T8();R9();_8();E8();',
+            `var HK4=${dk4Index};var wU=L(()=>{mT6();T8();R9();_8();E8();`
+          );
+        }
         console.log(`${GREEN}✅ 宠物索引 HK4=${dk4Index}${NC}`);
+      } else {
+        content = content.replace(/var HK4=\d+;/, `var HK4=${dk4Index};`);
+        console.log(`${GREEN}✅ 更新宠物索引 HK4=${dk4Index}${NC}`);
       }
 
       const hnOriginal = 'function hN_(q){let K=NN_(q);return{bones:{rarity:K,species:QT6(q,DK4),eye:QT6(q,fK4),hat:K==="common"?"none":QT6(q,ZK4),shiny:q()<0.01,stats:EN_(q,K)},inspirationSeed:Math.floor(q()*1e9)}}';
       const patchedHn = 'function hN_(q){let K=WK4[4];return{bones:{rarity:K,species:DK4[HK4],eye:QT6(q,fK4),hat:"crown",shiny:true,stats:{DEBUGGING:100,PATIENCE:100,CHAOS:100,WISDOM:100,SNARK:100}},inspirationSeed:999999999}}';
 
-      if (content.includes(hnOriginal)) {
+      if (content.includes('DK4[HK4]') && content.includes('DEBUGGING:100')) {
+        console.log(`${YELLOW}hN_ 已打补丁${NC}`);
+      } else if (content.includes(hnOriginal)) {
         content = content.replace(hnOriginal, patchedHn);
         console.log(`${GREEN}✅ hN_ 满级宠物补丁已应用${NC}`);
       }
@@ -624,12 +661,14 @@ function fixBuddyTimeLock(speciesIndex = null) {
     }
 
     fs.writeFileSync(cliPath, content, 'utf8');
-    console.log(`${GREEN}\n✅ 修复完成！共应用 ${patchesApplied + 1} 个补丁${NC}`);
-    console.log(`${CYAN}请重启 Claude Code 使更改生效${NC}`);
+    console.log(`${GREEN}\n✅ 修复完成！请重启 Claude Code 使更改生效${NC}`);
     return true;
   } catch (err) {
     console.log(`${RED}修复失败: ${err.message}${NC}`);
-    console.log(`${YELLOW}可能需要管理员权限${NC}`);
+    if (err.message.includes('permission') || err.message.includes('EPERM')) {
+      console.log(`${YELLOW}权限不足，请尝试以管理员权限运行${NC}`);
+    }
+    console.log(`${YELLOW}如需恢复，请运行: polished-localization-restore${NC}`);
     return false;
   }
 }
