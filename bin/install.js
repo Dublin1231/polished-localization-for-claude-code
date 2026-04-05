@@ -572,20 +572,14 @@ function fixBuddyTimeLock(speciesIndex = null) {
       
       if (content.includes('W54[HK0]') && content.includes('DEBUGGING:100')) {
         console.log(`${YELLOW}宠物索引已设置（之前已打补丁）${NC}`);
-      } else if (!content.includes('var HK0=')) {
-        const hk0Match = content.match(/var HK0=\d+;/);
-        if (hk0Match) {
-          content = content.replace(hk0Match[0], `var HK0=${w54Index};`);
-        } else {
-          content = content.replace(
-            'var ME_,PE_="friend-2026-401",sS1;',
-            `var ME_,PE_="friend-2026-401",sS1,HK0=${w54Index};`
-          );
-        }
+      } else if (content.includes('var ME_,PE_="friend-2026-401",sS1;')) {
+        content = content.replace(
+          'var ME_,PE_="friend-2026-401",sS1;',
+          `var ME_,PE_="friend-2026-401",sS1,HK0=${w54Index};`
+        );
         console.log(`${GREEN}✅ 宠物索引 HK0=${w54Index} (${selectedPet})${NC}`);
       } else {
-        content = content.replace(/var HK0=\d+;/, `var HK0=${w54Index};`);
-        console.log(`${GREEN}✅ 更新宠物索引 HK0=${w54Index}${NC}`);
+        console.log(`${YELLOW}未找到原始宠物加载代码，可能版本不兼容${NC}`);
       }
       
       // 3. 修改 WE_ 函数（检查最终形式）
@@ -617,25 +611,19 @@ function fixBuddyTimeLock(speciesIndex = null) {
 
       const dk4Index = petToSpeciesIndex[availablePets[speciesIndex]] || 0;
 
-      // 检测 HK4 是否已经声明过（检查是否已打补丁）
-      // 已打补丁的标志：HK4=X;var wU= 或 var HK4=X;
-      const hk4AlreadyDeclared = /HK4=\d+;/.test(content) || /var HK4=\d+;/.test(content);
-      
       // 检测 hN_ 是否已打补丁（最终形式）
       const hnAlreadyPatched = content.includes('DK4[HK4]') && content.includes('DEBUGGING:100');
       
-      if (hk4AlreadyDeclared || hnAlreadyPatched) {
+      if (hnAlreadyPatched) {
         console.log(`${YELLOW}检测到 2.1.91 宠物代码已被处理过，跳过 HK4 处理${NC}`);
+      } else if (content.includes('var wU=L(()=>{mT6();T8();R9();_8();E8();')) {
+        content = content.replace(
+          'var wU=L(()=>{mT6();T8();R9();_8();E8();',
+          `var HK4=${dk4Index};var wU=L(()=>{mT6();T8();R9();_8();E8();`
+        );
+        console.log(`${GREEN}✅ 宠物索引 HK4=${dk4Index}${NC}`);
       } else {
-        // 只有在 HK4 未声明时才添加
-        const hasOriginalWULoading = content.includes('var wU=L(()=>{mT6();T8();R9();_8();E8();');
-        if (hasOriginalWULoading) {
-          content = content.replace(
-            'var wU=L(()=>{mT6();T8();R9();_8();E8();',
-            `var HK4=${dk4Index};var wU=L(()=>{mT6();T8();R9();_8();E8();`
-          );
-          console.log(`${GREEN}✅ 宠物索引 HK4=${dk4Index}${NC}`);
-        }
+        console.log(`${YELLOW}未找到原始宠物加载代码，可能版本不兼容${NC}`);
       }
 
       const hnOriginal = 'function hN_(q){let K=NN_(q);return{bones:{rarity:K,species:QT6(q,DK4),eye:QT6(q,fK4),hat:K==="common"?"none":QT6(q,ZK4),shiny:q()<0.01,stats:EN_(q,K)},inspirationSeed:Math.floor(q()*1e9)}}';
